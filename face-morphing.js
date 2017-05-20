@@ -6,8 +6,14 @@
  * Assumes that `tracking.js`, `delaunay`, and `PyExtJs` have been loaded.
  */
 
+const BACKSPACE = 8;
+const DELETE = 46;
+
+///
+
 var currMarkerId = 0;
 var points = {};
+var added = []; // track the history of point additions
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -40,7 +46,7 @@ function makeGetCoordinates(id) {
     document.body.appendChild(createMarker('marker' + currMarkerId));
     $('#marker' + currMarkerId).css('left', posX - 5).css('top', posY - 5).show();
     ++currMarkerId;
-  
+    
     posX -= imgPos[0];
     posY -= imgPos[1];
     
@@ -49,6 +55,7 @@ function makeGetCoordinates(id) {
       points[id] = [];
     }
     points[id].push([posX, posY]);
+    added.push(id); // because we just added a point to the ID array
   };
   
   return getCoordinates;
@@ -63,11 +70,31 @@ function createMarker(id) {
 }
 
 $(document).ready(function() {
+  // Point selection click handlers
   $('#from').click(makeGetCoordinates('from'));
   $('#to').click(makeGetCoordinates('to'));
   
+  // "Finalize point selection" button handler
   $('#point-sel-btn').click(function(evt) {
     $('#from').off('click');
     $('#to').off('click');
+  });
+  
+  // Keypress handler
+  $(document).on('keydown', function(evt) {
+    switch (evt.keyCode) {
+      case BACKSPACE:
+      case DELETE:
+        // Remove the most recently added point
+        if (added.length > 0) {
+          --currMarkerId;
+          var markerElt = document.getElementById('marker' + currMarkerId);
+          document.body.removeChild(markerElt);
+          
+          var id = added.pop();
+          points[id].pop();
+        }
+        break;
+    }
   });
 });
