@@ -1,43 +1,52 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Face Morphing: Example Usage</title>
-    
-    <!-- Stylesheets and... stuff -->
-    <link href="example.min.css" rel="stylesheet">
-    <meta name="viewport" content="width=device-width">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <title>Face Morphing: Example Usage</title>
+
+  <!-- Stylesheets and... stuff -->
+  <link href="base.min.css" rel="stylesheet">
+  <link href="face-morphing.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width">
+  <!--[if lt IE 9]>
+  <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
 </head>
 <body>
-    <div class="wrapper">
-        <h1 align="middle">Face Morphing: Example Usage</h1>
-        <h3 align="middle">Owen Jow &nbsp;&middot;&nbsp; May 2017</h3>
-        <hr />
-        <br />
-        
-        <span class="anchor"></span>
-        <h2 style="margin-bottom: 0.3em">Let's get started with a demonstration</h2>
-        <p>
-            ...by, say, morphing between the two pictures displayed below.
-            
-            <table width="100%"><tr>
-                <td>
-                    <img src="example_from.jpg" />
-                    <figcaption align="middle"><code>"from" image</code></figcaption>
-                </td>
-                <td>
-                    <img src="example_to.jpg" />
-                    <figcaption align="middle"><code>"to" image</code></figcaption>
-                </td>
-            </tr></table>
-        </p>
-    </div>
-    
-    <!-- Scripts -->
-    <script src="face-morphing.js"></script>
+  <div class="wrapper">
+    <h1 align="middle">Face Morphing: Example Usage</h1>
+    <h3 align="middle">Owen Jow &nbsp;&middot;&nbsp; May 2017</h3>
+    <hr />
+    <br />
+
+    <span class="anchor"></span>
+    <h2 style="margin-bottom: 0.3em">Let's get started with a demonstration</h2>
+    <p>
+      <div class="left">
+        ...by, say, morphing between the two pictures displayed below.<br />
+        The first thing we'll have you do is select corresponding points in each image.
+      </div>
+      <div class="right">
+        <button class="button" id="point-sel-btn">Finalize point selection</button>
+      </div>
+      <br /><br /><br />
+
+      <table width="100%"><tr>
+        <td>
+          <img src="example_from.jpg" id="from" />
+          <figcaption align="middle"><code>"from" image</code></figcaption>
+        </td>
+        <td>
+          <img src="example_to.jpg" id="to" />
+          <figcaption align="middle"><code>"to" image</code></figcaption>
+        </td>
+      </tr></table>
+    </p>
+  </div>
+
+  <!-- Scripts -->
+  <script src="jquery-3.2.1.min.js"></script>
+  <script src="face-morphing.js"></script>
 </body>
 </html>
