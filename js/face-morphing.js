@@ -3,7 +3,7 @@
  * Owen Jow
  * 
  * A JavaScript module providing face morphing functionality.
- * Assumes that `tracking.js`, `delaunay.js`, and `Math.js` have been loaded.
+ * Assumes that `clmtrackr`, `delaunay.js`, and `Math.js` have been loaded.
  *
  * Credit to J.T.L. for his implementation of Delaunay triangulation
  * (https://github.com/ironwallaby/delaunay).
@@ -15,14 +15,15 @@ const ID_CVS_FROM = 'canvas-from';
 const ID_CVS_TO = 'canvas-to';
 const ID_CVS_OUT = 'canvas-output';
 
-const MARKER_SRC = 'marker_gold.png';
+const MARKER_SRC = 'images/marker_gold.png';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
-const BUTTON_LABEL_ANEW = 'Done... for now.'
+const BUTTON_LABEL_ANEW = 'Done... for now.';
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
 const DELETE = 46;
+const ENTER = 13;
 
 ///
 
@@ -31,6 +32,8 @@ var points = {};
 var added = []; // track the history of point additions
 var canvas;
 var midpoints, triangles; // to be filled in after triangulation
+
+var bigGreenButton;
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -76,6 +79,23 @@ function makeGetCoordinates(id) {
   };
   
   return getCoordinates;
+}
+
+/*
+ * Draw markers for an already-existent array of points.
+ */
+function drawMarkers(id, imgPos) {
+  var relevantPoints = points[id];
+  var numPoints = relevantPoints.length;
+  var pt;
+  
+  for (var i = 0; i < numPoints; ++i) {
+    pt = relevantPoints[i];
+    document.body.appendChild(createMarker('marker' + currMarkerId)); // TODO: debug offsets below
+    $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0] - 30)
+                               .css('top', pt[1] + imgPos[1] - 35).show();
+    ++currMarkerId;
+  }
 }
 
 function createMarker(id) {
@@ -290,7 +310,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
       src0Color = bilerp(src0X, src0Y, fromData, width, height);
       src1Color = bilerp(src1X, src1Y, toData, width, height);
       
-      xyIdx = (x * width + y) * 4; // TODO: should this be `height`?
+      xyIdx = (x * width + y) * 4;
       finalData[xyIdx] = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
       finalData[xyIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
       finalData[xyIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
@@ -308,12 +328,7 @@ function fillOutputCanvas(finalData, width, height) {
   
   var ctx = cvs.getContext('2d');
   var imgData = ctx.createImageData(width, height);
-  var data = imgData.data;
-  
-  for (var i = 0, len = width * height * 4; i < len; ++i) {
-    data[i] = finalData[i];
-  }
-  
+  imgData.data.set(new Uint8ClampedArray(finalData));
   ctx.putImageData(imgData, 0, 0);
   $('#' + ID_CVS_OUT).show();
 }
@@ -330,20 +345,52 @@ function setupCanvas(canvasId, imageId) {
   cvs.height = img.clientHeight;
 }
 
+function finalizePointSelection() {
+  $('#from').off('click');
+  $('#to').off('click');
+  
+  var mtData = runTriangulation();
+  midpoints = mtData[0], triangles = mtData[1];
+  bigGreenButton.innerText = BUTTON_LABEL_COMPUTE;
+}
+
+function automaticFeatureDetection(id) {
+  var img = document.getElementById(id);
+  
+  // Virtual canvas used during tracking
+  var cvs = document.createElement('canvas');
+  var ctx = cvs.getContext('2d');
+  cvs.width = img.clientWidth, cvs.height = img.clientHeight;
+  ctx.drawImage(img, 0, 0);
+  
+  var ctracker = new clm.tracker({stopOnConvergence: true});
+  ctracker.init(pModel);
+  ctracker.start(cvs);
+  
+  var onConvergence = function(evt) {
+    points[id] = ctracker.getCurrentPosition();
+    drawMarkers(id, findPosition(img));
+    if (id == ID_IMG_FROM) {
+      automaticFeatureDetection(ID_IMG_TO);
+    } else if (id == ID_IMG_TO) {
+      finalizePointSelection();
+    }
+    document.removeEventListener('clmtrackrConverged', onConvergence);
+  };
+  
+  document.addEventListener('clmtrackrConverged', onConvergence, false);
+}
+
 $(document).ready(function() {
   // Point selection click handlers
   $('#from').click(makeGetCoordinates(ID_IMG_FROM));
   $('#to').click(makeGetCoordinates(ID_IMG_TO));
   
   // "Big green button" handler
+  bigGreenButton = document.getElementById('big-green-btn');
   $('#big-green-btn').click(function(evt) {
     if (this.innerText == BUTTON_LABEL_FINALIZE) {
-      $('#from').off('click');
-      $('#to').off('click');
-    
-      var mtData = runTriangulation();
-      midpoints = mtData[0], triangles = mtData[1];
-      this.innerText = BUTTON_LABEL_COMPUTE;
+      finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO]);
       this.innerText = BUTTON_LABEL_ANEW;
@@ -367,6 +414,12 @@ $(document).ready(function() {
           
           var id = added.pop();
           points[id].pop();
+        }
+        break;
+      case ENTER:
+        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+          // Run automatic feature detection
+          automaticFeatureDetection(ID_IMG_FROM);
         }
         break;
     }
