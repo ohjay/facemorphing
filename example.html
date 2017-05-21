@@ -28,28 +28,30 @@
         The first thing we'll have you do is select corresponding points in each image.
       </div>
       <div class="right">
-        <button class="button" id="point-sel-btn">Finalize point selection</button>
+        <button class="button" id="big-green-btn">Finalize point selection</button>
       </div>
       <br /><br /><br />
 
       <table width="100%"><tr>
         <td>
-          <img src="example_from.jpg" id="from" />
+          <img src="http://i.imgur.com/teoCo4R.jpg" id="from" crossOrigin="" />
           <figcaption align="middle"><code>"from" image</code></figcaption>
         </td>
         <td>
-          <img src="example_to.jpg" id="to" />
+          <img src="http://i.imgur.com/1g5crIW.jpg" id="to" crossOrigin="" />
           <figcaption align="middle"><code>"to" image</code></figcaption>
         </td>
       </tr></table>
       <canvas id="canvas-from"></canvas>
       <canvas id="canvas-to"></canvas>
+      <canvas id="canvas-output"></canvas>
     </p>
   </div>
 
   <!-- Scripts -->
   <script src="jquery-3.2.1.min.js"></script>
   <script src="delaunay.js"></script>
+  <script src="math.min.js"></script>
   <script src="face-morphing.js"></script>
 </body>
 </html>

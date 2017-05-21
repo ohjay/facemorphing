@@ -32,6 +32,6 @@
   width: 30%;
 }
 
-#canvas-from, #canvas-to {
+#canvas-from, #canvas-to, #canvas-output {
   display: none;
 }
