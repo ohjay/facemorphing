@@ -175,6 +175,8 @@ function renderTriangulation(triangles, canvasId, points) {
  * as a horizontally-joined set of (x, y, 1) vectors –
  * meaning that if there are N such vectors, the returned array
  * would be of size 3 x N.
+ *
+ * Our triangle should consist of tangible points (as opposed to, say, indices).
  */
 function triangleInterior(triangle) {
   var point0 = triangle[0], point1 = triangle[1], point2 = triangle[2];
@@ -188,7 +190,7 @@ function triangleInterior(triangle) {
   // Compile a list by filtering points from the bounding box
   for (var x = minX; x <= maxX; ++x) {
     for (var y = minY; y <= maxY; ++y) {
-      if (Delaunay.contains(triangle, [x, y])) { // TODO: confirm this works; tri pts seem wrong
+      if (Delaunay.contains(triangle, [x, y])) {
         if (interior.length == 0) {
           interior = [[x], [y], [1]];
         } else {
