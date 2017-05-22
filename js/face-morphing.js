@@ -25,6 +25,9 @@ const BACKSPACE = 8;
 const DELETE = 46;
 const ENTER = 13;
 
+// For debugging aid
+const SHOW_OUTPUT_TRIANGULATION = false;
+
 ///
 
 var currMarkerId = 0;
@@ -240,8 +243,8 @@ function bilerp(x, y, img, width, height) {
   var y0, y1;
   var output = [];
   
-  var r = Math.floor(x), c = Math.floor(y);
-  var vdiff = x - r, hdiff = y - c;
+  var r = Math.floor(y), c = Math.floor(x);
+  var vdiff = y - r, hdiff = x - c;
   var idx00, idx10, idx01, idx11;
   var inc;
   
@@ -301,16 +304,20 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
     for (var j = 0; j < warpedSrc0.length; ++j) {
       src0X = warpedSrc0[j][0], src0Y = warpedSrc0[j][1];
       src1X = warpedSrc1[j][0], src1Y = warpedSrc1[j][1];
-      x = Math.floor(midCoords[0][j]);
-      y = Math.floor(midCoords[1][j]);
+      x = Math.floor(midCoords[0][j]); // TODO: issue is that this x is a column (a horiz. offset)
+      y = Math.floor(midCoords[1][j]); // but my code from before uses it as a row; TODO resolve
       
-      src0X = src0X.clip(0, height - 1), src0Y = src0Y.clip(0, width - 1);
-      src1X = src1X.clip(0, height - 1), src1Y = src1Y.clip(0, width - 1);
+      src0Y = src0Y.clip(0, height - 1), src0X = src0X.clip(0, width - 1);
+      src1Y = src1Y.clip(0, height - 1), src1X = src1X.clip(0, width - 1);
       
       src0Color = bilerp(src0X, src0Y, fromData, width, height);
       src1Color = bilerp(src1X, src1Y, toData, width, height);
       
-      xyIdx = (x * width + y) * 4;
+      xyIdx = (y * width + x) * 4;
+      if (xyIdx + 2 >= width * height * 4) {
+        // console.log('y: ' + y + ', x: ' + x + ', xyIdx: ' + xyIdx);
+        continue;
+      }
       finalData[xyIdx] = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
       finalData[xyIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
       finalData[xyIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
@@ -319,6 +326,9 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
 
   // Turn final image pixels into an actual image
   fillOutputCanvas(finalData, width, height);
+  if (SHOW_OUTPUT_TRIANGULATION) {
+    renderTriangulation(triangles, ID_CVS_OUT, midpoints);
+  }
 }
 
 function fillOutputCanvas(finalData, width, height) {
