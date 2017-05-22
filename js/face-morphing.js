@@ -26,7 +26,7 @@ const DELETE = 46;
 const ENTER = 13;
 
 // For debugging aid
-const SHOW_OUTPUT_TRIANGULATION = false;
+const SHOW_OUTPUT_TRIANGULATION = true;
 
 ///
 
@@ -94,7 +94,7 @@ function drawMarkers(id, imgPos) {
   
   for (var i = 0; i < numPoints; ++i) {
     pt = relevantPoints[i];
-    document.body.appendChild(createMarker('marker' + currMarkerId)); // TODO: debug offsets below
+    document.body.appendChild(createMarker('marker' + currMarkerId)); // TODO: debug offsets
     $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0] - 30)
                                .css('top', pt[1] + imgPos[1] - 35).show();
     ++currMarkerId;
@@ -112,9 +112,9 @@ function createMarker(id) {
 function addCornerPoints(id) {
   var img = document.getElementById(id);
   points[id].push([0, 0]);
-  points[id].push([0, img.clientHeight]);
-  points[id].push([img.clientWidth, 0]);
-  points[id].push([img.clientWidth, img.clientHeight]);
+  points[id].push([0, img.clientHeight - 1]);
+  points[id].push([img.clientWidth - 1, 0]);
+  points[id].push([img.clientWidth - 1, img.clientHeight - 1]);
 }
 
 function getMidpoints(pointsFrom, pointsTo, t) {
@@ -162,20 +162,12 @@ function renderTriangulation(triangles, canvasId, points) {
     ctx.lineTo(point1[0], point1[1]);
     ctx.lineTo(point2[0], point2[1]);
     ctx.closePath();
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = '#0000ff';
     ctx.stroke();
   }
   
   $('#' + canvasId).show();
-}
-
-/*
- * Given six 2D points (three for each triangle), computes the matrix
- * for the affine transformation between triangle 1 and triangle 2.
- */
-function computeAffine(X, Y) {
-  return math.multiply(Y, math.inv(X));
 }
 
 /*
@@ -186,22 +178,22 @@ function computeAffine(X, Y) {
  */
 function triangleInterior(triangle) {
   var point0 = triangle[0], point1 = triangle[1], point2 = triangle[2];
-  var min0 = Math.min(point0[0], point1[0], point2[0]);
-  var max0 = Math.max(point0[0], point1[0], point2[0]);
-  var min1 = Math.min(point0[1], point1[1], point2[1]);
-  var max1 = Math.max(point0[1], point1[1], point2[1]);
+  var minX = Math.min(point0[0], point1[0], point2[0]);
+  var maxX = Math.max(point0[0], point1[0], point2[0]);
+  var minY = Math.min(point0[1], point1[1], point2[1]);
+  var maxY = Math.max(point0[1], point1[1], point2[1]);
   
   var interior = [];
   
   // Compile a list by filtering points from the bounding box
-  for (var i = min0; i <= max0; ++i) {
-    for (var j = min1; j <= max1; ++j) {
-      if (Delaunay.contains(triangle, [i, j])) {
+  for (var x = minX; x <= maxX; ++x) {
+    for (var y = minY; y <= maxY; ++y) {
+      if (Delaunay.contains(triangle, [x, y])) { // TODO: confirm this works; tri pts seem wrong
         if (interior.length == 0) {
-          interior = [[i], [j], [1]];
+          interior = [[x], [y], [1]];
         } else {
-          interior[0].push(i);
-          interior[1].push(j);
+          interior[0].push(x);
+          interior[1].push(y);
           interior[2].push(1);
         }
       }
@@ -235,34 +227,42 @@ function getImageData(img) {
 }
 
 /*
+ * Given six 2D points (three for each triangle), computes the matrix
+ * for the affine transformation between triangle 1 and triangle 2.
+ */
+function computeAffine(X, Y) {
+  return math.multiply(Y, math.inv(X));
+}
+
+/*
  * Bilinearly interpolates between the four neighbor values
  * associated with a particular RGB value in the image.
  */
 function bilerp(x, y, img, width, height) {
-  var val00, val10, val01, val11;
-  var y0, y1;
+  var tlVal, trVal, blVal, brVal;
+  var topv, bottomv;
   var output = [];
   
-  var r = Math.floor(y), c = Math.floor(x);
-  var vdiff = y - r, hdiff = x - c;
-  var idx00, idx10, idx01, idx11;
+  var yfl = Math.floor(y), xfl = Math.floor(x);
+  var vdiff = y - yfl, hdiff = x - xfl;
+  var tlIdx, trIdx, blIdx, brIdx;
   var inc;
   
-  idx00 = (r * width + c) * 4;
-  idx10 = (r * width + c + 1) * 4;
-  idx01 = ((r + 1) * width + c) * 4;
-  idx11 = ((r + 1) * width + c + 1) * 4;
+  tlIdx = ( yfl      * width + xfl    ) * 4;
+  trIdx = ( yfl      * width + xfl + 1) * 4;
+  blIdx = ((yfl + 1) * width + xfl    ) * 4;
+  brIdx = ((yfl + 1) * width + xfl + 1) * 4;
   
   for (inc = 0; inc < 3; ++inc) {
-    val00 = img[idx00 + inc];
-    val10 = (c < width - 1) ? img[idx10 + inc] : val00;
-    val01 = (r < height - 1) ? img[idx01 + inc] : val00;
-    val11 = (r < height - 1 && c < width - 1) ? img[idx11 + inc] : val00;
+    tlVal = img[tlIdx + inc];
+    trVal = (xfl < width  - 1) ? img[trIdx + inc] : tlVal;
+    blVal = (yfl < height - 1) ? img[blIdx + inc] : tlVal;
+    brVal = (xfl < width  - 1 && yfl < height - 1) ? img[brIdx + inc] : tlVal;
     
-    y0 = hdiff * val00 + (1.0 - hdiff) * val10;
-    y1 = hdiff * val01 + (1.0 - hdiff) * val11;
+    topv    = (1.0 - hdiff) * tlVal + hdiff * trVal;
+    bottomv = (1.0 - hdiff) * blVal + hdiff * brVal;
     
-    output.push(vdiff * y0 + (1.0 - vdiff) * y1);
+    output.push((1.0 - vdiff) * topv + vdiff * bottomv);
   }
   
   return output;
@@ -271,10 +271,10 @@ function bilerp(x, y, img, width, height) {
 function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   var idx0, idx1, idx2;
   var fromTri, toTri, targetTri;
-  var Y, A0, A1;
-  var midCoords;
+  var X0, X1, Y, A0, A1;
+  var midCoords, numInterior;
   var warpedSrc0, warpedSrc1;
-  var src0X, src0Y, src1X, src1Y, x, y, src0Color, src1Color, xyIdx;
+  var src0X, src0Y, src1X, src1Y, xfl, yfl, src0Color, src1Color, finalIdx;
   
   var fromImg = document.getElementById(ID_IMG_FROM);
   var toImg = document.getElementById(ID_IMG_TO);
@@ -290,37 +290,34 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
     toTri = [toPts[idx0], toPts[idx1], toPts[idx2]];
     targetTri = [midpoints[idx0], midpoints[idx1], midpoints[idx2]];
     
-    fromTri = math.transpose(math.resize(fromTri, [3, 3], 1));
-    toTri = math.transpose(math.resize(toTri, [3, 3], 1));
+    X0 = math.transpose(math.resize(fromTri, [3, 3], 1));
+    X1 = math.transpose(math.resize(toTri, [3, 3], 1));
     Y = math.transpose(math.resize(targetTri, [3, 3], 1));
     
-    A0 = computeAffine(Y, fromTri);
-    A1 = computeAffine(Y, toTri);
+    A0 = computeAffine(Y, X0);
+    A1 = computeAffine(Y, X1);
     
     midCoords = triangleInterior(targetTri);
-    warpedSrc0 = math.transpose(math.multiply(A0, midCoords));
-    warpedSrc1 = math.transpose(math.multiply(A1, midCoords));
+    warpedSrc0 = math.multiply(A0, midCoords);
+    warpedSrc1 = math.multiply(A1, midCoords);
     
-    for (var j = 0; j < warpedSrc0.length; ++j) {
-      src0X = warpedSrc0[j][0], src0Y = warpedSrc0[j][1];
-      src1X = warpedSrc1[j][0], src1Y = warpedSrc1[j][1];
-      x = Math.floor(midCoords[0][j]); // TODO: issue is that this x is a column (a horiz. offset)
-      y = Math.floor(midCoords[1][j]); // but my code from before uses it as a row; TODO resolve
-      
-      src0Y = src0Y.clip(0, height - 1), src0X = src0X.clip(0, width - 1);
-      src1Y = src1Y.clip(0, height - 1), src1X = src1X.clip(0, width - 1);
+    numInterior = midCoords[0].length;
+    for (var j = 0; j < numInterior; ++j) {
+      src0X = warpedSrc0[0][j].clip(0, width  - 1);
+      src0Y = warpedSrc0[1][j].clip(0, height - 1);
+      src1X = warpedSrc1[0][j].clip(0, width  - 1);
+      src1Y = warpedSrc1[1][j].clip(0, height - 1);
       
       src0Color = bilerp(src0X, src0Y, fromData, width, height);
-      src1Color = bilerp(src1X, src1Y, toData, width, height);
+      src1Color = bilerp(src1X, src1Y, toData,   width, height);
       
-      xyIdx = (y * width + x) * 4;
-      if (xyIdx + 2 >= width * height * 4) {
-        // console.log('y: ' + y + ', x: ' + x + ', xyIdx: ' + xyIdx);
-        continue;
-      }
-      finalData[xyIdx] = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
-      finalData[xyIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
-      finalData[xyIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+      xfl = Math.floor(midCoords[0][j]);
+      yfl = Math.floor(midCoords[1][j]);
+      finalIdx = (yfl * width + xfl) * 4;
+      
+      finalData[finalIdx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
+      finalData[finalIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
+      finalData[finalIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
     }
   }
 
