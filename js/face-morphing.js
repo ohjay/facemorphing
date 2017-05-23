@@ -25,8 +25,17 @@ const BACKSPACE = 8;
 const DELETE = 46;
 const ENTER = 13;
 
+// Contrasting colors
+const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
+                    '#ffde00', '#a65628', '#f781bf', '#999999'];
+const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
+                    [152, 78, 163], [255, 127, 0], [255, 222, 0],
+                    [166, 86, 40], [247, 129, 191], [153, 153, 153]];
+
 // For debugging aid
-const SHOW_OUTPUT_TRIANGULATION = true;
+const SHOW_OUTPUT_TRIANGULATION = false;
+const WARP_SINGLE = -1; // -1, 0, or, 1
+const USE_NEAREST = false;
 
 ///
 
@@ -171,6 +180,43 @@ function renderTriangulation(triangles, canvasId, points) {
 }
 
 /*
+ * Expects a (2+) x N array of triangle points.
+ * Primarily intended for debugging.
+ */
+function renderFilledTriangle(interiorPts, fillColor, canvasId) {
+  var cvs = document.getElementById(canvasId);
+  var ctx = cvs.getContext('2d');
+  var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+  var data = imgData.data;
+  
+  var xfl, yfl, idx;
+  var numPts = interiorPts[0].length;
+  for (var i = 0; i < numPts; ++i) {
+    xfl = Math.floor(interiorPts[0][i]);
+    yfl = Math.floor(interiorPts[1][i]);
+    idx = (yfl * cvs.width + xfl) * 4;
+    
+    data[idx]     = fillColor[0];
+    data[idx + 1] = fillColor[1];
+    data[idx + 2] = fillColor[2];
+    data[idx + 3] = 255;
+  }
+  
+  ctx.putImageData(imgData, 0, 0);
+}
+
+/*
+ * Primarily intended for debugging.
+ */
+function replaceImageData(data, canvasId) {
+  var cvs = document.getElementById(canvasId);
+  var ctx = cvs.getContext('2d');
+  var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+  imgData.data.set(new Uint8ClampedArray(data));
+  ctx.putImageData(imgData, 0, 0);
+}
+
+/*
  * Returns all of the coordinates inside of the given triangle
  * as a horizontally-joined set of (x, y, 1) vectors –
  * meaning that if there are N such vectors, the returned array
@@ -223,7 +269,7 @@ function getImageData(img) {
   var ctx = cvs.getContext('2d');
   cvs.width = img.clientWidth;
   cvs.height = img.clientHeight;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
   
   return ctx.getImageData(0, 0, img.width, img.height);
 }
@@ -270,6 +316,16 @@ function bilerp(x, y, img, width, height) {
   return output;
 }
 
+/*
+ * [Sort of] nearest-neighbor interpolation.
+ * Primarily intended for debugging (used as an alternative to `bilerp`).
+ */
+function nearest(x, y, img, width, height) {
+  var xfl = Math.floor(x), yfl = Math.floor(y);
+  var idx = (yfl * width + xfl) * 4;
+  return [img[idx], img[idx + 1], img[idx + 2]];
+}
+
 function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   var idx0, idx1, idx2;
   var fromTri, toTri, targetTri;
@@ -281,6 +337,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   var fromImg = document.getElementById(ID_IMG_FROM);
   var toImg = document.getElementById(ID_IMG_TO);
   var width = fromImg.clientWidth, height = fromImg.clientHeight;
+  var sample = USE_NEAREST ? nearest : bilerp;
   
   var fromData = getImageData(fromImg).data;
   var toData = getImageData(toImg).data;
@@ -310,16 +367,22 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
       src1X = warpedSrc1[0][j].clip(0, width  - 1);
       src1Y = warpedSrc1[1][j].clip(0, height - 1);
       
-      src0Color = bilerp(src0X, src0Y, fromData, width, height);
-      src1Color = bilerp(src1X, src1Y, toData,   width, height);
+      src0Color = sample(src0X, src0Y, fromData, width, height);
+      src1Color = sample(src1X, src1Y, toData,   width, height);
       
       xfl = Math.floor(midCoords[0][j]);
       yfl = Math.floor(midCoords[1][j]);
       finalIdx = (yfl * width + xfl) * 4;
       
-      finalData[finalIdx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
-      finalData[finalIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
-      finalData[finalIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+      if (WARP_SINGLE >= 0) {
+        finalData[finalIdx]     = !WARP_SINGLE ? src0Color[0] : src1Color[0];
+        finalData[finalIdx + 1] = !WARP_SINGLE ? src0Color[1] : src1Color[1];
+        finalData[finalIdx + 2] = !WARP_SINGLE ? src0Color[2] : src1Color[2];
+      } else {
+        finalData[finalIdx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
+        finalData[finalIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
+        finalData[finalIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+      }
     }
   }
 
