@@ -200,7 +200,7 @@ var Delaunay;
       /* Yay, we're done! */
       return open;
     },
-    contains: function(tri, p) {
+    contains: function(tri, p, bound) {
       var a = tri[1][0] - tri[0][0],
           b = tri[2][0] - tri[0][0],
           c = tri[1][1] - tri[0][1],
@@ -215,7 +215,7 @@ var Delaunay;
           v = (a * (p[1] - tri[0][1]) - c * (p[0] - tri[0][0])) / i;
 
       /* If we're outside the tri, fail. */
-      if(u < -0.03 || v < -0.03 || (u + v) > 1.03)
+      if(u < -bound || v < -bound || (u + v) > 1 + bound)
         return null;
 
       return [u, v];

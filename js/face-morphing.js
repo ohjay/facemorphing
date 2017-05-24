@@ -236,7 +236,7 @@ function triangleInterior(triangle) {
   // Compile a list by filtering points from the bounding box
   for (var x = minX; x <= maxX; ++x) {
     for (var y = minY; y <= maxY; ++y) {
-      if (Delaunay.contains(triangle, [x, y])) {
+      if (Delaunay.contains(triangle, [x, y], 0.0)) {
         if (interior.length == 0) {
           interior = [[x], [y], [1]];
         } else {
@@ -326,6 +326,23 @@ function nearest(x, y, img, width, height) {
   return [img[idx], img[idx + 1], img[idx + 2]];
 }
 
+/*
+ * Sets the specified pixel's value to the average of the two passed-in colors.
+ * (In the future, we may want to add an interpolation parameter to the mix.)
+ */
+function colorPixel(data, idx, src0Color, src1Color) {
+  if (WARP_SINGLE >= 0) {
+    data[idx]     = !WARP_SINGLE ? src0Color[0] : src1Color[0];
+    data[idx + 1] = !WARP_SINGLE ? src0Color[1] : src1Color[1];
+    data[idx + 2] = !WARP_SINGLE ? src0Color[2] : src1Color[2];
+  } else {
+    data[idx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
+    data[idx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
+    data[idx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+  }
+  data[idx + 3] = 255;
+}
+
 function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   var idx0, idx1, idx2;
   var fromTri, toTri, targetTri;
@@ -341,13 +358,19 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   
   var fromData = getImageData(fromImg).data;
   var toData = getImageData(toImg).data;
-  var finalData = new Array(width * height * 4).fill(255);
+  var finalData = new Array(width * height * 4).fill(0);
   
-  for (var i = 0; i < triangles.length; i += 3) {
+  var numTriangles = triangles.length;
+  var targetTriangles = [];
+  var transfs = [];
+  
+  var i, j;
+  for (i = 0; i < numTriangles; i += 3) {
     idx0 = triangles[i], idx1 = triangles[i + 1], idx2 = triangles[i + 2];
     fromTri = [fromPts[idx0], fromPts[idx1], fromPts[idx2]];
     toTri = [toPts[idx0], toPts[idx1], toPts[idx2]];
     targetTri = [midpoints[idx0], midpoints[idx1], midpoints[idx2]];
+    targetTriangles.push(targetTri);
     
     X0 = math.transpose(math.resize(fromTri, [3, 3], 1));
     X1 = math.transpose(math.resize(toTri, [3, 3], 1));
@@ -355,13 +378,14 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
     
     A0 = computeAffine(Y, X0);
     A1 = computeAffine(Y, X1);
+    transfs.push([A0, A1]);
     
     midCoords = triangleInterior(targetTri);
     warpedSrc0 = math.multiply(A0, midCoords);
     warpedSrc1 = math.multiply(A1, midCoords);
     
     numInterior = midCoords[0].length;
-    for (var j = 0; j < numInterior; ++j) {
+    for (j = 0; j < numInterior; ++j) {
       src0X = warpedSrc0[0][j].clip(0, width  - 1);
       src0Y = warpedSrc0[1][j].clip(0, height - 1);
       src1X = warpedSrc1[0][j].clip(0, width  - 1);
@@ -374,14 +398,34 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
       yfl = Math.floor(midCoords[1][j]);
       finalIdx = (yfl * width + xfl) * 4;
       
-      if (WARP_SINGLE >= 0) {
-        finalData[finalIdx]     = !WARP_SINGLE ? src0Color[0] : src1Color[0];
-        finalData[finalIdx + 1] = !WARP_SINGLE ? src0Color[1] : src1Color[1];
-        finalData[finalIdx + 2] = !WARP_SINGLE ? src0Color[2] : src1Color[2];
-      } else {
-        finalData[finalIdx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
-        finalData[finalIdx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
-        finalData[finalIdx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+      colorPixel(finalData, finalIdx, src0Color, src1Color);
+    }
+  }
+  
+  // Clean up holes
+  var numPixels = width * height * 4;
+  for (i = 3; i < numPixels; i += 4) {
+    if (finalData[i] == 0) {
+      xfl = Math.floor(i / 4) % width;
+      yfl = Math.floor((i / 4) / width);
+      
+      for (j = 0; j < numTriangles; ++j) {
+        targetTri = targetTriangles[j];
+        if (Delaunay.contains(targetTri, [xfl, yfl], 0.05)) {
+          warpedSrc0 = math.multiply(transfs[j][0], [[xfl], [yfl], [1]]);
+          warpedSrc1 = math.multiply(transfs[j][1], [[xfl], [yfl], [1]]);
+          
+          src0X = warpedSrc0[0][0].clip(0, width  - 1);
+          src0Y = warpedSrc0[1][0].clip(0, height - 1);
+          src1X = warpedSrc1[0][0].clip(0, width  - 1);
+          src1Y = warpedSrc1[1][0].clip(0, height - 1);
+          
+          src0Color = sample(src0X, src0Y, fromData, width, height);
+          src1Color = sample(src1X, src1Y, toData,   width, height);
+          
+          colorPixel(finalData, i - 3, src0Color, src1Color);
+          break;
+        }
       }
     }
   }
