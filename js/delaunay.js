@@ -215,7 +215,7 @@ var Delaunay;
           v = (a * (p[1] - tri[0][1]) - c * (p[0] - tri[0][0])) / i;
 
       /* If we're outside the tri, fail. */
-      if(u < -0.01 || v < -0.01 || (u + v) > 1.01)
+      if(u < -0.03 || v < -0.03 || (u + v) > 1.03)
         return null;
 
       return [u, v];
