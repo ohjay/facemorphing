@@ -103,9 +103,9 @@ function drawMarkers(id, imgPos) {
   
   for (var i = 0; i < numPoints; ++i) {
     pt = relevantPoints[i];
-    document.body.appendChild(createMarker('marker' + currMarkerId)); // TODO: debug offsets
-    $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0] - 30)
-                               .css('top', pt[1] + imgPos[1] - 35).show();
+    document.body.appendChild(createMarker('marker' + currMarkerId));
+    $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0])
+                               .css('top', pt[1] + imgPos[1]).show();
     ++currMarkerId;
   }
 }
@@ -477,7 +477,7 @@ function automaticFeatureDetection(id) {
   var cvs = document.createElement('canvas');
   var ctx = cvs.getContext('2d');
   cvs.width = img.clientWidth, cvs.height = img.clientHeight;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
   
   var ctracker = new clm.tracker({stopOnConvergence: true});
   ctracker.init(pModel);
