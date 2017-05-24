@@ -201,13 +201,6 @@ var Delaunay;
       return open;
     },
     contains: function(tri, p) {
-      /* Bounding box test first, for quick rejections. */
-      if((p[0] < tri[0][0] && p[0] < tri[1][0] && p[0] < tri[2][0]) ||
-         (p[0] > tri[0][0] && p[0] > tri[1][0] && p[0] > tri[2][0]) ||
-         (p[1] < tri[0][1] && p[1] < tri[1][1] && p[1] < tri[2][1]) ||
-         (p[1] > tri[0][1] && p[1] > tri[1][1] && p[1] > tri[2][1]))
-        return null;
-
       var a = tri[1][0] - tri[0][0],
           b = tri[2][0] - tri[0][0],
           c = tri[1][1] - tri[0][1],
@@ -222,7 +215,7 @@ var Delaunay;
           v = (a * (p[1] - tri[0][1]) - c * (p[0] - tri[0][0])) / i;
 
       /* If we're outside the tri, fail. */
-      if(u < 0.0 || v < 0.0 || (u + v) > 1.0)
+      if(u < -0.01 || v < -0.01 || (u + v) > 1.01)
         return null;
 
       return [u, v];

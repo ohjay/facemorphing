@@ -236,7 +236,7 @@ function triangleInterior(triangle) {
   // Compile a list by filtering points from the bounding box
   for (var x = minX; x <= maxX; ++x) {
     for (var y = minY; y <= maxY; ++y) {
-      if (Delaunay.contains(triangle, [x, y])) { // (TODO) to fix jaggies, make this less strict?
+      if (Delaunay.contains(triangle, [x, y])) {
         if (interior.length == 0) {
           interior = [[x], [y], [1]];
         } else {
