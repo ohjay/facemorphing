@@ -18,7 +18,7 @@ const ID_CVS_OUT = 'canvas-output';
 const MARKER_SRC = 'images/marker_gold.png';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
-const BUTTON_LABEL_ANEW = 'Done... for now.';
+const BUTTON_LABEL_DOWNLOAD = 'Download output image';
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -497,6 +497,12 @@ function automaticFeatureDetection(id) {
   document.addEventListener('clmtrackrConverged', onConvergence, false);
 }
 
+function downloadImage(canvasId) {
+  var cvs = document.getElementById(canvasId);
+  var image = cvs.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+  window.location.href = image;
+}
+
 $(document).ready(function() {
   // Point selection click handlers
   $('#from').click(makeGetCoordinates(ID_IMG_FROM));
@@ -509,7 +515,9 @@ $(document).ready(function() {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO]);
-      this.innerText = BUTTON_LABEL_ANEW;
+      this.innerText = BUTTON_LABEL_DOWNLOAD;
+    } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
+      downloadImage(ID_CVS_OUT);
     }
   });
   
