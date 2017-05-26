@@ -48,6 +48,10 @@ var midpoints, triangles; // to be filled in after triangulation
 
 var bigGreenButton;
 
+var cameraStream;
+var cameraOn = false;
+var requestId; // for camera frames
+
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
     for (var posX = 0, posY = 0; elt; elt = elt.offsetParent) {
@@ -505,19 +509,28 @@ function downloadImage(canvasId) {
 }
 
 /*
- * Starts the user's camera.
+ * Starts the user's camera if it is currently off.
+ * Stops the user's camera if it is currently on.
+ *
  * Code reference: https://github.com/eduardolundgren/tracking.js
  */
-function startCamera() {
+function toggleCamera() {
   var camera = document.getElementById('camera');
-  window.navigator.getUserMedia = (window.navigator.getUserMedia ||
-      window.navigator.webkitGetUserMedia ||
-      window.navigator.mozGetUserMedia || window.navigator.msGetUserMedia);
+  if (cameraOn) {
+    camera.pause(); camera.src = '';
+    cameraStream.getTracks()[0].stop();
+    window.cancelAnimationFrame(requestId); // stop requesting frames
+  } else {
+    window.navigator.getUserMedia = (window.navigator.getUserMedia ||
+        window.navigator.webkitGetUserMedia ||
+        window.navigator.mozGetUserMedia || window.navigator.msGetUserMedia);
 
-  window.navigator.getUserMedia({
-    video: true,
-    audio: false
-  }, function(stream) {
+    // Note that the following function requires HTTPS in Chrome
+    window.navigator.getUserMedia({
+      video: true,
+      audio: false
+    }, function(stream) {
+      cameraStream = stream;
       try {
         camera.src = window.URL.createObjectURL(stream);
       } catch (err) {
@@ -525,39 +538,37 @@ function startCamera() {
       }
     }, function() {
       throw Error('Cannot capture user camera.');
-    }
-  );
-
-  var cvs = document.createElement('canvas');
-  var ctx = cvs.getContext('2d');
-  var width, height;
-
-  var resizeCanvas_ = function() {
-    width = camera.offsetWidth;
-    height = camera.offsetHeight;
-    cvs.width = width;
-    cvs.height = height;
-  };
-  resizeCanvas_();
-  camera.addEventListener('resize', resizeCanvas_);
-
-  // Process individual frames
-  var requestId;
-  var requestAnimationFrame_ = function() {
-    requestId = window.requestAnimationFrame(function() {
-      if (camera.readyState === camera.HAVE_ENOUGH_DATA) {
-        try {
-          ctx.drawImage(camera, 0, 0, width, height);
-        } catch (err) {}
-        var data = ctx.getImageData(0, 0, width, height).data;
-        // Do something with the image data
-      }
-      requestAnimationFrame_();
     });
-  };
 
-  // window.cancelAnimationFrame(requestId); // when we want to stop
-  requestAnimationFrame_(); // when we want to start
+    var cvs = document.createElement('canvas');
+    var ctx = cvs.getContext('2d');
+    var width, height;
+
+    var resizeCanvas_ = function() {
+      width = camera.offsetWidth;
+      height = camera.offsetHeight;
+      cvs.width = width;
+      cvs.height = height;
+    };
+    resizeCanvas_();
+    camera.addEventListener('resize', resizeCanvas_);
+
+    // Process individual frames
+    var requestAnimationFrame_ = function() {
+      requestId = window.requestAnimationFrame(function() {
+        if (camera.readyState === camera.HAVE_ENOUGH_DATA) {
+          try {
+            ctx.drawImage(camera, 0, 0, width, height);
+          } catch (err) {}
+          var data = ctx.getImageData(0, 0, width, height).data;
+          // Do something with the image data
+        }
+        requestAnimationFrame_();
+      });
+    };
+    requestAnimationFrame_();
+  }
+  cameraOn = !cameraOn;
 }
 
 $(document).ready(function() {
@@ -604,7 +615,7 @@ $(document).ready(function() {
         }
         break;
       case SPACE:
-        startCamera();
+        toggleCamera();
         break;
     }
   });
