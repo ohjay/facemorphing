@@ -24,6 +24,7 @@ const BUTTON_LABEL_DOWNLOAD = 'Download output image';
 const BACKSPACE = 8;
 const DELETE = 46;
 const ENTER = 13;
+const SPACE = 32;
 
 // Contrasting colors
 const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
@@ -503,6 +504,57 @@ function downloadImage(canvasId) {
   window.location.href = image;
 }
 
+/*
+ * Starts the user's camera.
+ * Code reference: https://github.com/eduardolundgren/tracking.js
+ */
+function startCamera() {
+  var camera = document.getElementById('camera');
+  window.navigator.getUserMedia({
+    video: true,
+    audio: false
+  }, function(stream) {
+      try {
+        camera.src = window.URL.createObjectURL(stream);
+      } catch (err) {
+        camera.src = stream;
+      }
+    }, function() {
+      throw Error('Cannot capture user camera.');
+    }
+  );
+
+  var cvs = document.getElementById('canvas-camera');
+  var ctx = cvs.getContext('2d');
+  var width, height;
+
+  var resizeCanvas_ = function() {
+    width = camera.offsetWidth;
+    height = camera.offsetHeight;
+    cvs.width = width;
+    cvs.height = height;
+  };
+  resizeCanvas_();
+  camera.addEventListener('resize', resizeCanvas_);
+
+  // Process individual frames
+  var requestId;
+  var requestAnimationFrame_ = function() {
+    requestId = window.requestAnimationFrame(function() {
+      if (camera.readyState === camera.HAVE_ENOUGH_DATA) {
+        try {
+          ctx.drawImage(camera, 0, 0, width, height);
+        } catch (err) {}
+        // Do image handling here
+      }
+      requestAnimationFrame_();
+    });
+  };
+
+  // window.cancelAnimationFrame(requestId); // when we want to stop
+  requestAnimationFrame_(); // when we want to start
+}
+
 $(document).ready(function() {
   // Point selection click handlers
   $('#from').click(makeGetCoordinates(ID_IMG_FROM));
@@ -545,6 +597,9 @@ $(document).ready(function() {
           // Run automatic feature detection
           automaticFeatureDetection(ID_IMG_FROM);
         }
+        break;
+      case SPACE:
+        startCamera();
         break;
     }
   });
