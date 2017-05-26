@@ -510,6 +510,10 @@ function downloadImage(canvasId) {
  */
 function startCamera() {
   var camera = document.getElementById('camera');
+  window.navigator.getUserMedia = (window.navigator.getUserMedia ||
+      window.navigator.webkitGetUserMedia ||
+      window.navigator.mozGetUserMedia || window.navigator.msGetUserMedia);
+
   window.navigator.getUserMedia({
     video: true,
     audio: false
