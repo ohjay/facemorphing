@@ -528,7 +528,7 @@ function startCamera() {
     }
   );
 
-  var cvs = document.getElementById('canvas-camera');
+  var cvs = document.createElement('canvas');
   var ctx = cvs.getContext('2d');
   var width, height;
 
@@ -549,7 +549,8 @@ function startCamera() {
         try {
           ctx.drawImage(camera, 0, 0, width, height);
         } catch (err) {}
-        // Do image handling here
+        var data = ctx.getImageData(0, 0, width, height).data;
+        // Do something with the image data
       }
       requestAnimationFrame_();
     });
