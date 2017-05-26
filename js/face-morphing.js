@@ -14,6 +14,7 @@ const ID_IMG_TO = 'to';
 const ID_CVS_FROM = 'canvas-from';
 const ID_CVS_TO = 'canvas-to';
 const ID_CVS_OUT = 'canvas-output';
+const ID_INPUT_UPLOAD = 'upload';
 
 const MARKER_SRC = 'images/marker_gold.png';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
@@ -593,6 +594,23 @@ $(document).ready(function() {
   setupCanvas(ID_CVS_FROM, ID_IMG_FROM);
   setupCanvas(ID_CVS_TO, ID_IMG_TO);
   
+  // Image upload
+  document.getElementById(ID_INPUT_UPLOAD).addEventListener('change', function() {
+    var imgFrom = document.getElementById(ID_IMG_FROM);
+    var file = document.getElementById(ID_INPUT_UPLOAD).files[0];
+    var reader = new FileReader();
+
+    reader.onloadend = function() {
+      imgFrom.src = reader.result;
+    }
+
+    if (file) {
+      reader.readAsDataURL(file);
+    } else {
+      imgFrom.src = '';
+    }
+  }, true);
+
   // Keypress handler
   $(document).on('keydown', function(evt) {
     switch (evt.keyCode) {
