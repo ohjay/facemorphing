@@ -24,16 +24,23 @@
     <span class="anchor"></span>
     <h2 style="margin-bottom: 0.3em">Let's get started with a demonstration</h2>
     <p>
-      <div class="left">
+      <div class="info-left">
         ...by, say, morphing between the two pictures displayed below.<br />
         The first thing we'll have you do is select corresponding points in each image.
       </div>
-      <div class="right">
+      <div class="info-right">
         <button class="button" id="big-green-btn">Finalize point selection</button>
       </div>
       <br /><br /><br />
 
-      <input type="file" id="upload" />
+      <div class="upload-left">
+        <label for="upload-from" class="button upload">Replace this image</label>
+        <input type="file" id="upload-from" style="visibility: hidden;" />
+      </div>
+      <div class="upload-right">
+        <label for="upload-to" class="button upload">Replace this image</label>
+        <input type="file" id="upload-to" style="visibility: hidden;" />
+      </div>
       <table width="100%"><tr>
         <td width="50%">
           <div id="cropper-outer-container">

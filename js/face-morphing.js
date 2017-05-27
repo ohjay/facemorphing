@@ -14,13 +14,16 @@ const ID_IMG_TO = 'to';
 const ID_CVS_FROM = 'canvas-from';
 const ID_CVS_TO = 'canvas-to';
 const ID_CVS_OUT = 'canvas-output';
-const ID_INPUT_UPLOAD = 'upload';
+const ID_INPUT_UPLOAD_FROM = 'upload-from';
+const ID_INPUT_UPLOAD_TO = 'upload-to';
 
 const MARKER_SRC = 'images/marker_gold.png';
 const BUTTON_SET_CROP = 'Set source image crop';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
 const BUTTON_LABEL_DOWNLOAD = 'Download output image';
+const UPLOAD_PROMPT = 'Replace this image';
+const UPLOAD_DISABLED_TXT = 'Replace this image';
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -599,6 +602,10 @@ $(document).ready(function() {
       cropper.destroy();
       var imgFrom = document.getElementById(ID_IMG_FROM);
       imgFrom.src = croppedCvs.toDataURL();
+      $('.upload').removeClass('upload-disabled');
+      $('.upload').text(UPLOAD_PROMPT);
+      document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
+      document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
       this.innerText = BUTTON_LABEL_FINALIZE;
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
@@ -615,9 +622,9 @@ $(document).ready(function() {
   setupCanvas(ID_CVS_TO, ID_IMG_TO);
   
   // Image upload
-  document.getElementById(ID_INPUT_UPLOAD).addEventListener('change', function() {
+  document.getElementById(ID_INPUT_UPLOAD_FROM).addEventListener('change', function() {
     var imgFrom = document.getElementById(ID_IMG_FROM);
-    var file = document.getElementById(ID_INPUT_UPLOAD).files[0];
+    var file = document.getElementById(ID_INPUT_UPLOAD_FROM).files[0];
     var reader = new FileReader();
 
     reader.onloadend = function() {
@@ -642,6 +649,10 @@ $(document).ready(function() {
         }
       });
       
+      document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
+      document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
+      $('.upload').addClass('upload-disabled');
+      $('.upload').text(UPLOAD_DISABLED_TXT);
       bigGreenButton.innerText = BUTTON_SET_CROP;
     }
 

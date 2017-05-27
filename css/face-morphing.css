@@ -22,14 +22,40 @@
   background-color: #3e8e41;
 }
 
-.left {
+.upload {
+  background-color: #1155cc;
+  padding: 7.5px 16px;
+  font-size: 14px;
+}
+
+.upload:hover {
+  background-color: #0a409b;
+}
+
+.info-left {
   float: left;
   width: 70%;
 }
 
-.right {
+.info-right {
   float: right;
   width: 30%;
+}
+
+.upload-left {
+  display: inline-block;
+  width: 50%;
+}
+
+.upload-right {
+  float: right;
+  display: inline-block;
+  width: 50%;
+}
+
+.upload-disabled {
+  background-color: #0a409b;
+  cursor: not-allowed;
 }
 
 #canvas-from, #canvas-to, #canvas-output {
