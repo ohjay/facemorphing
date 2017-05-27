@@ -48,9 +48,9 @@
 }
 
 .upload-right {
-  float: right;
   display: inline-block;
   width: 50%;
+  float: right;
 }
 
 .upload-disabled {

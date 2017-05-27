@@ -16,6 +16,7 @@ const ID_CVS_TO = 'canvas-to';
 const ID_CVS_OUT = 'canvas-output';
 const ID_INPUT_UPLOAD_FROM = 'upload-from';
 const ID_INPUT_UPLOAD_TO = 'upload-to';
+const ID_OUTER_CONTAINER = 'outer-container';
 
 const MARKER_SRC = 'images/marker_gold.png';
 const BUTTON_SET_CROP = 'Set source image crop';
@@ -53,6 +54,7 @@ var midpoints, triangles; // to be filled in after triangulation
 
 var bigGreenButton;
 var cropper;
+var currentCropId; // ID of image currently being cropped
 
 var cameraStream;
 var cameraOn = false;
@@ -585,6 +587,50 @@ function toggleCamera() {
   cameraOn = !cameraOn;
 }
 
+function handleImageUpload(imgId, inputId) {
+  currentCropId = imgId;
+  var img = document.getElementById(imgId);
+  var file = document.getElementById(inputId).files[0];
+  var reader = new FileReader();
+
+  reader.onloadend = function() {
+    img.style.display = 'none';
+    img.src = reader.result;
+    
+    var otherId = (imgId == ID_IMG_FROM) ? ID_IMG_TO : ID_IMG_FROM;
+    var otherImg = document.getElementById(otherId);
+    var oc = document.getElementById(ID_OUTER_CONTAINER + '-' + imgId);
+    oc.style.width  = otherImg.clientWidth  + 'px';
+    oc.style.height = otherImg.clientHeight + 'px';
+    cropper = new Cropper(img, {
+      cropBoxResizable: false,
+      aspectRatio: otherImg.clientWidth / otherImg.clientHeight,
+      ready: function() {
+        this.cropper.setCropBoxData({
+          left: 0,
+          top: 0,
+          width: otherImg.clientWidth,
+          height: otherImg.clientHeight
+        });
+        img.style.display = 'inline';
+      }
+    });
+    
+    // Disable both upload buttons
+    document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
+    document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
+    $('.upload').addClass('upload-disabled');
+    $('.upload').text(UPLOAD_DISABLED_TXT);
+    bigGreenButton.innerText = BUTTON_SET_CROP;
+  }
+
+  if (file) {
+    reader.readAsDataURL(file);
+  } else {
+    img.src = '';
+  }
+}
+
 $(document).ready(function() {
   // Point selection click handlers
   $('#from').click(makeGetCoordinates(ID_IMG_FROM));
@@ -594,14 +640,15 @@ $(document).ready(function() {
   bigGreenButton = document.getElementById('big-green-btn');
   $('#big-green-btn').click(function(evt) {
     if (this.innerText == BUTTON_SET_CROP) {
-      var imgTo = document.getElementById(ID_IMG_TO);
+      var otherId = (currentCropId == ID_IMG_FROM) ? ID_IMG_TO : ID_IMG_FROM;
+      var otherImg = document.getElementById(otherId);
       var croppedCvs = cropper.getCroppedCanvas({
-        width: imgTo.clientWidth, // unfortunate amount of downsampling on some images
-        height: imgTo.clientHeight
+        width: otherImg.clientWidth, // unfortunate amount of downsampling on some images
+        height: otherImg.clientHeight
       });
       cropper.destroy();
-      var imgFrom = document.getElementById(ID_IMG_FROM);
-      imgFrom.src = croppedCvs.toDataURL();
+      var img = document.getElementById(currentCropId);
+      img.src = croppedCvs.toDataURL();
       $('.upload').removeClass('upload-disabled');
       $('.upload').text(UPLOAD_PROMPT);
       document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
@@ -623,44 +670,10 @@ $(document).ready(function() {
   
   // Image upload
   document.getElementById(ID_INPUT_UPLOAD_FROM).addEventListener('change', function() {
-    var imgFrom = document.getElementById(ID_IMG_FROM);
-    var file = document.getElementById(ID_INPUT_UPLOAD_FROM).files[0];
-    var reader = new FileReader();
-
-    reader.onloadend = function() {
-      imgFrom.style.display = 'none';
-      imgFrom.src = reader.result;
-      
-      var imgTo = document.getElementById(ID_IMG_TO);
-      var oc = document.getElementById('cropper-outer-container');
-      oc.style.width  = imgTo.clientWidth  + 'px';
-      oc.style.height = imgTo.clientHeight + 'px';
-      cropper = new Cropper(imgFrom, {
-        cropBoxResizable: false,
-        aspectRatio: imgTo.clientWidth / imgTo.clientHeight,
-        ready: function() {
-          this.cropper.setCropBoxData({
-            left: 0,
-            top: 0,
-            width: imgTo.clientWidth,
-            height: imgTo.clientHeight
-          });
-          imgFrom.style.display = 'inline';
-        }
-      });
-      
-      document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
-      document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
-      $('.upload').addClass('upload-disabled');
-      $('.upload').text(UPLOAD_DISABLED_TXT);
-      bigGreenButton.innerText = BUTTON_SET_CROP;
-    }
-
-    if (file) {
-      reader.readAsDataURL(file);
-    } else {
-      imgFrom.src = '';
-    }
+    handleImageUpload(ID_IMG_FROM, ID_INPUT_UPLOAD_FROM);
+  }, true);
+  document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() {
+    handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO);
   }, true);
 
   // Keypress handler
