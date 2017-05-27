@@ -614,6 +614,7 @@ $(document).ready(function() {
     var reader = new FileReader();
 
     reader.onloadend = function() {
+      imgFrom.style.display = 'none';
       imgFrom.src = reader.result;
       
       var imgTo = document.getElementById(ID_IMG_TO);
@@ -630,7 +631,7 @@ $(document).ready(function() {
             width: imgTo.clientWidth,
             height: imgTo.clientHeight
           });
-          $('.cropper-container').show();
+          imgFrom.style.display = 'inline';
         }
       });
       

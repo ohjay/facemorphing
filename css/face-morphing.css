@@ -39,11 +39,3 @@
 img {
   max-width: 100%;
 }
-
-.cropper-crop-box {
-  background-color: white;
-}
-
-.cropper-container {
-  display: none;
-}
