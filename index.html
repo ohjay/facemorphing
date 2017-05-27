@@ -7,6 +7,7 @@
 
   <!-- Stylesheets and... stuff -->
   <link href="css/base.min.css" rel="stylesheet">
+  <link href="css/cropper.min.css" rel="stylesheet">
   <link href="css/face-morphing.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width">
   <!--[if lt IE 9]>
@@ -33,13 +34,17 @@
       <br /><br /><br />
 
       <input type="file" id="upload" />
-      <table width="100%"><tr>
-        <td>
-          <img src="http://i.imgur.com/teoCo4R.jpg" id="from" crossOrigin="" />
+      <table id="table" width="100%"><tr>
+        <td id="left-td" width="50%">
+          <div id="cropper-outer-container">
+            <img src="http://i.imgur.com/teoCo4R.jpg" id="from" crossOrigin="" />
+          </div>
           <figcaption align="middle"><code>"from" image</code></figcaption>
         </td>
-        <td>
-          <img src="http://i.imgur.com/1g5crIW.jpg" id="to" crossOrigin="" />
+        <td width="50%">
+          <div>
+            <img src="http://i.imgur.com/1g5crIW.jpg" id="to" crossOrigin="" />
+          </div>
           <figcaption align="middle"><code>"to" image</code></figcaption>
         </td>
       </tr></table>
@@ -56,6 +61,7 @@
   <script src="js/delaunay.js"></script>
   <script src="js/math.min.js"></script>
   <script src="js/clmtrackr.min.js"></script>
+  <script src="js/cropper.min.js"></script>
   <script src="js/model_pca_20_svm.js"></script>
   <script src="js/face-morphing.js"></script>
 </body>

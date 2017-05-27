@@ -35,3 +35,15 @@
 #canvas-from, #canvas-to, #canvas-output {
   display: none;
 }
+
+img {
+  max-width: 100%;
+}
+
+.cropper-crop-box {
+  background-color: white;
+}
+
+.cropper-container {
+  display: none;
+}

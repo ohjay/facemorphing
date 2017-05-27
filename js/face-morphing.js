@@ -3,7 +3,7 @@
  * Owen Jow
  * 
  * A JavaScript module providing face morphing functionality.
- * Assumes that `clmtrackr`, `delaunay.js`, and `Math.js` have been loaded.
+ * Assumes that `clmtrackr`, `delaunay.js`, etc. have been loaded.
  *
  * Credit to J.T.L. for his implementation of Delaunay triangulation
  * (https://github.com/ironwallaby/delaunay).
@@ -17,6 +17,7 @@ const ID_CVS_OUT = 'canvas-output';
 const ID_INPUT_UPLOAD = 'upload';
 
 const MARKER_SRC = 'images/marker_gold.png';
+const BUTTON_SET_CROP = 'Set source image crop';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
 const BUTTON_LABEL_DOWNLOAD = 'Download output image';
@@ -48,6 +49,7 @@ var canvas;
 var midpoints, triangles; // to be filled in after triangulation
 
 var bigGreenButton;
+var cropper;
 
 var cameraStream;
 var cameraOn = false;
@@ -580,7 +582,18 @@ $(document).ready(function() {
   // "Big green button" handler
   bigGreenButton = document.getElementById('big-green-btn');
   $('#big-green-btn').click(function(evt) {
-    if (this.innerText == BUTTON_LABEL_FINALIZE) {
+    if (this.innerText == BUTTON_SET_CROP) {
+      var imgTo = document.getElementById(ID_IMG_TO);
+      var croppedCvs = cropper.getCroppedCanvas({
+        width: imgTo.clientWidth, // unfortunate amount of downsampling on some images
+        height: imgTo.clientHeight,
+        fillColor: '#ffffff'
+      });
+      cropper.destroy();
+      var imgFrom = document.getElementById(ID_IMG_FROM);
+      imgFrom.src = croppedCvs.toDataURL();
+      this.innerText = BUTTON_LABEL_FINALIZE;
+    } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO]);
@@ -602,6 +615,26 @@ $(document).ready(function() {
 
     reader.onloadend = function() {
       imgFrom.src = reader.result;
+      
+      var imgTo = document.getElementById(ID_IMG_TO);
+      var oc = document.getElementById('cropper-outer-container');
+      oc.style.width  = imgTo.clientWidth  + 'px';
+      oc.style.height = imgTo.clientHeight + 'px';
+      cropper = new Cropper(imgFrom, {
+        cropBoxResizable: false,
+        aspectRatio: imgTo.clientWidth / imgTo.clientHeight,
+        ready: function() {
+          this.cropper.setCropBoxData({
+            left: 0,
+            top: 0,
+            width: imgTo.clientWidth,
+            height: imgTo.clientHeight
+          });
+          $('.cropper-container').show();
+        }
+      });
+      
+      bigGreenButton.innerText = BUTTON_SET_CROP;
     }
 
     if (file) {
