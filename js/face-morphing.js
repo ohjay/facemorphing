@@ -23,6 +23,7 @@ const BUTTON_SET_CROP = 'Set source image crop';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
 const BUTTON_LABEL_DOWNLOAD = 'Download output image';
+const BUTTON_REFRESH = 'Start over again';
 const UPLOAD_PROMPT = 'Replace this image';
 const UPLOAD_DISABLED_TXT = 'Replace this image';
 
@@ -475,6 +476,7 @@ function setupCanvas(canvasId, imageId) {
 }
 
 function finalizePointSelection() {
+  disableUploads();
   var npFrom = (points[ID_IMG_FROM] || []).length,
       npTo   = (points[ID_IMG_TO]   || []).length;
   if (npFrom == 0 || npTo == 0) {
@@ -587,6 +589,20 @@ function toggleCamera() {
   cameraOn = !cameraOn;
 }
 
+function disableUploads() {
+  document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
+  document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
+  $('.upload').addClass('upload-disabled');
+  $('.upload').text(UPLOAD_DISABLED_TXT);
+}
+
+function reenableUploads() {
+  $('.upload').removeClass('upload-disabled');
+  $('.upload').text(UPLOAD_PROMPT);
+  document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
+  document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
+}
+
 function handleImageUpload(imgId, inputId) {
   currentCropId = imgId;
   var img = document.getElementById(imgId);
@@ -617,10 +633,7 @@ function handleImageUpload(imgId, inputId) {
     });
     
     // Disable both upload buttons
-    document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
-    document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
-    $('.upload').addClass('upload-disabled');
-    $('.upload').text(UPLOAD_DISABLED_TXT);
+    disableUploads();
     bigGreenButton.innerText = BUTTON_SET_CROP;
   }
 
@@ -649,10 +662,7 @@ $(document).ready(function() {
       cropper.destroy();
       var img = document.getElementById(currentCropId);
       img.src = croppedCvs.toDataURL();
-      $('.upload').removeClass('upload-disabled');
-      $('.upload').text(UPLOAD_PROMPT);
-      document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
-      document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
+      reenableUploads();
       this.innerText = BUTTON_LABEL_FINALIZE;
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
@@ -661,6 +671,9 @@ $(document).ready(function() {
       this.innerText = BUTTON_LABEL_DOWNLOAD;
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
+      this.innerText = BUTTON_REFRESH;
+    } else if (this.innerText == BUTTON_REFRESH) {
+      window.location.reload(false);
     }
   });
   
