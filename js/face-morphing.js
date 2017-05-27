@@ -470,12 +470,20 @@ function setupCanvas(canvasId, imageId) {
 }
 
 function finalizePointSelection() {
-  $('#from').off('click');
-  $('#to').off('click');
+  var npFrom = (points[ID_IMG_FROM] || []).length,
+      npTo   = (points[ID_IMG_TO]   || []).length;
+  if (npFrom == 0 || npTo == 0) {
+    alert('You must select at least one point in each image!');
+  } else if (npFrom != npTo) {
+    alert('You must select the same number of points in each image!');
+  } else {
+    $('#from').off('click');
+    $('#to').off('click');
   
-  var mtData = runTriangulation();
-  midpoints = mtData[0], triangles = mtData[1];
-  bigGreenButton.innerText = BUTTON_LABEL_COMPUTE;
+    var mtData = runTriangulation();
+    midpoints = mtData[0], triangles = mtData[1];
+    bigGreenButton.innerText = BUTTON_LABEL_COMPUTE;
+  }
 }
 
 function automaticFeatureDetection(id) {
@@ -586,8 +594,7 @@ $(document).ready(function() {
       var imgTo = document.getElementById(ID_IMG_TO);
       var croppedCvs = cropper.getCroppedCanvas({
         width: imgTo.clientWidth, // unfortunate amount of downsampling on some images
-        height: imgTo.clientHeight,
-        fillColor: '#ffffff'
+        height: imgTo.clientHeight
       });
       cropper.destroy();
       var imgFrom = document.getElementById(ID_IMG_FROM);
