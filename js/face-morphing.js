@@ -9,29 +9,32 @@
  * (https://github.com/ironwallaby/delaunay).
  */
 
-const ID_IMG_FROM = 'from';
-const ID_IMG_TO = 'to';
-const ID_CVS_FROM = 'canvas-from';
-const ID_CVS_TO = 'canvas-to';
-const ID_CVS_OUT = 'canvas-output';
-const ID_INPUT_UPLOAD_FROM = 'upload-from';
-const ID_INPUT_UPLOAD_TO = 'upload-to';
-const ID_OUTER_CONTAINER = 'outer-container';
+const ID_IMG_FROM           = 'from';
+const ID_IMG_TO             = 'to';
+const ID_CVS_FROM           = 'canvas-from';
+const ID_CVS_TO             = 'canvas-to';
+const ID_CVS_OUT            = 'canvas-output';
+const ID_INPUT_UPLOAD_FROM  = 'upload-from';
+const ID_INPUT_UPLOAD_TO    = 'upload-to';
+const ID_OUTER_CONTAINER    = 'outer-container';
 
-const MARKER_SRC = 'images/marker_gold.png';
-const BUTTON_SET_CROP = 'Set source image crop';
+const MARKER_SRC            = 'images/marker_gold.png';
+const BUTTON_SET_CROP       = 'Set source image crop';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
-const BUTTON_LABEL_COMPUTE = 'Compute midpoint image';
+const BUTTON_LABEL_COMPUTE  = 'Compute midpoint image';
 const BUTTON_LABEL_DOWNLOAD = 'Download output image';
-const BUTTON_REFRESH = 'Start over again';
-const UPLOAD_PROMPT = 'Replace this image';
-const UPLOAD_DISABLED_TXT = 'Replace this image';
+const BUTTON_REFRESH        = 'Start over again';
+const UPLOAD_PROMPT         = 'Replace this image';
+const UPLOAD_DISABLED_TXT   = 'Replace this image';
+
+const DISSOLVE_FRAC_0 = 0.5;
+const DISSOLVE_FRAC_1 = 0.5;
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
-const DELETE = 46;
-const ENTER = 13;
-const SPACE = 32;
+const DELETE    = 46;
+const ENTER     = 13;
+const SPACE     = 32;
 
 // Contrasting colors
 const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
@@ -341,18 +344,18 @@ function nearest(x, y, img, width, height) {
 }
 
 /*
- * Sets the specified pixel's value to the average of the two passed-in colors.
- * (In the future, we may want to add an interpolation parameter to the mix.)
+ * Sets the specified pixel's value to the weighted average of the two passed-in colors.
+ * The weights are given by the T0 and T1 parameters.
  */
-function colorPixel(data, idx, src0Color, src1Color) {
+function colorPixel(data, idx, src0Color, src1Color, t0, t1) {
   if (WARP_SINGLE >= 0) {
     data[idx]     = !WARP_SINGLE ? src0Color[0] : src1Color[0];
     data[idx + 1] = !WARP_SINGLE ? src0Color[1] : src1Color[1];
     data[idx + 2] = !WARP_SINGLE ? src0Color[2] : src1Color[2];
   } else {
-    data[idx]     = math.mean(src0Color[0], src1Color[0]).clip(0, 255);
-    data[idx + 1] = math.mean(src0Color[1], src1Color[1]).clip(0, 255);
-    data[idx + 2] = math.mean(src0Color[2], src1Color[2]).clip(0, 255);
+    data[idx]     = (src0Color[0] * t0 + src1Color[0] * t1).clip(0, 255);
+    data[idx + 1] = (src0Color[1] * t0 + src1Color[1] * t1).clip(0, 255);
+    data[idx + 2] = (src0Color[2] * t0 + src1Color[2] * t1).clip(0, 255);
   }
   data[idx + 3] = 255;
 }
@@ -412,7 +415,8 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
       yfl = Math.floor(midCoords[1][j]);
       finalIdx = (yfl * width + xfl) * 4;
       
-      colorPixel(finalData, finalIdx, src0Color, src1Color);
+      colorPixel(finalData, finalIdx, src0Color, src1Color,
+          DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
     }
   }
   
@@ -437,7 +441,8 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
           src0Color = sample(src0X, src0Y, fromData, width, height);
           src1Color = sample(src1X, src1Y, toData,   width, height);
           
-          colorPixel(finalData, i - 3, src0Color, src1Color);
+          colorPixel(finalData, i - 3, src0Color, src1Color,
+              DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
           break;
         }
       }
