@@ -461,9 +461,12 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
+  var imgFrom = document.getElementById(ID_IMG_FROM);
   var animatedSequence = new GIF({
     workers: 2,
-    quality: 10
+    quality: 10,
+    width: imgFrom.clientWidth,
+    height: imgFrom.clientHeight
   });
   
   var frame = document.createElement('canvas');
@@ -472,7 +475,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
     var m = getMidpoints(fromPts, toPts, t);
     var t = Delaunay.triangulate(m);
     computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO], frame);
-    animatedSequence.addFrame(frameCtx, {copy: true});
+    animatedSequence.addFrame(frameCtx, {copy: true, delay: 200});
   }
   
   animatedSequence.on('finished', function(blob) {
