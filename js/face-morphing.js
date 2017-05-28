@@ -472,10 +472,11 @@ function createAnimatedSequence(fromPts, toPts, step) {
   var frame = document.createElement('canvas');
   var frameCtx = frame.getContext('2d');
   for (var t = 1.0; t >= 0.0; t = Math.max(t - step, 0.0)) {
-    var m = getMidpoints(fromPts, toPts, t);
-    var t = Delaunay.triangulate(m);
-    computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO], frame);
-    animatedSequence.addFrame(frameCtx, {copy: true, delay: 200});
+    var mi = getMidpoints(fromPts, toPts, t);
+    var tr = Delaunay.triangulate(mi);
+    computeMidpointImage(mi, tr, points[ID_IMG_FROM], points[ID_IMG_TO], frame);
+    animatedSequence.addFrame(frameCtx, {copy: true, delay: 100});
+    if (t == 0.0) break;
   }
   
   animatedSequence.on('finished', function(blob) {
