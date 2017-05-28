@@ -29,12 +29,14 @@ const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
 const DISSOLVE_FRAC_0 = 0.5;
 const DISSOLVE_FRAC_1 = 0.5;
+const WARP_FRAC_STEP  = 0.1; // should definitely be customizable
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
 const DELETE    = 46;
 const ENTER     = 13;
 const SPACE     = 32;
+const BACKSLASH = 220;
 
 // Contrasting colors
 const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
@@ -167,14 +169,13 @@ function runTriangulation() {
   var midpoints = getMidpoints(points[ID_IMG_FROM], points[ID_IMG_TO], 0.5);
   var tri = Delaunay.triangulate(midpoints);
   
-  renderTriangulation(tri, ID_CVS_FROM, points[ID_IMG_FROM]);
-  renderTriangulation(tri, ID_CVS_TO, points[ID_IMG_TO]);
+  renderTriangulation(tri, document.getElementById(ID_CVS_FROM), points[ID_IMG_FROM]);
+  renderTriangulation(tri, document.getElementById(ID_CVS_TO),   points[ID_IMG_TO]);
   
   return [midpoints, tri];
 }
 
-function renderTriangulation(triangles, canvasId, points) {
-  var cvs = document.getElementById(canvasId);
+function renderTriangulation(triangles, cvs, points) {
   var ctx = cvs.getContext('2d');
   
   var idx0, idx1, idx2;
@@ -192,8 +193,8 @@ function renderTriangulation(triangles, canvasId, points) {
     ctx.strokeStyle = '#0000ff';
     ctx.stroke();
   }
-  
-  $('#' + canvasId).show();
+
+  cvs.style.display = 'inline'; // show canvas
 }
 
 /*
@@ -360,7 +361,10 @@ function colorPixel(data, idx, src0Color, src1Color, t0, t1) {
   data[idx + 3] = 255;
 }
 
-function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
+/*
+ * Determines the midpoint image, then renders it on CVS (a canvas).
+ */
+function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
   var idx0, idx1, idx2;
   var fromTri, toTri, targetTri;
   var X0, X1, Y, A0, A1;
@@ -450,14 +454,33 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts) {
   }
 
   // Turn final image pixels into an actual image
-  fillOutputCanvas(finalData, width, height);
+  fillOutputCanvas(finalData, cvs, width, height);
   if (SHOW_OUTPUT_TRIANGULATION) {
-    renderTriangulation(triangles, ID_CVS_OUT, midpoints);
+    renderTriangulation(triangles, cvs, midpoints);
   }
 }
 
-function fillOutputCanvas(finalData, width, height) {
-  var cvs = document.getElementById(ID_CVS_OUT);
+function createAnimatedSequence(fromPts, toPts, step) {
+  var animatedSequence = new GIF({
+    workers: 2,
+    quality: 10
+  });
+  
+  var frame = document.createElement('canvas');
+  for (var t = 1.0; t >= 0.0; t = Math.max(t - step, 0.0)) {
+    var m = getMidpoints(fromPts, toPts, t);
+    var t = Delaunay.triangulate(m);
+    computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO], frame);
+    animatedSequence.addFrame(frame);
+  }
+  
+  animatedSequence.on('finished', function(blob) {
+    window.open(URL.createObjectURL(blob));
+  });
+  animatedSequence.render();
+}
+
+function fillOutputCanvas(finalData, cvs, width, height) {
   cvs.width = width;
   cvs.height = height;
   
@@ -465,7 +488,7 @@ function fillOutputCanvas(finalData, width, height) {
   var imgData = ctx.createImageData(width, height);
   imgData.data.set(new Uint8ClampedArray(finalData));
   ctx.putImageData(imgData, 0, 0);
-  $('#' + ID_CVS_OUT).show();
+  cvs.style.display = 'inline'; // show canvas
 }
 
 function setupCanvas(canvasId, imageId) {
@@ -672,7 +695,8 @@ $(document).ready(function() {
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
-      computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM], points[ID_IMG_TO]);
+      computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
+          points[ID_IMG_TO], document.getElementById(ID_CVS_OUT));
       this.innerText = BUTTON_LABEL_DOWNLOAD;
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
@@ -717,6 +741,12 @@ $(document).ready(function() {
         break;
       case SPACE:
         toggleCamera();
+        break;
+      case BACKSLASH:
+        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE ||
+            bigGreenButton.innerText == BUTTON_LABEL_COMPUTE) {
+          createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], WARP_FRAC_STEP);
+        }
         break;
     }
   });
