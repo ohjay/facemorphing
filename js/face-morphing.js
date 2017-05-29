@@ -17,6 +17,8 @@ const ID_CVS_OUT            = 'canvas-output';
 const ID_INPUT_UPLOAD_FROM  = 'upload-from';
 const ID_INPUT_UPLOAD_TO    = 'upload-to';
 const ID_OUTER_CONTAINER    = 'outer-container';
+const ID_PROGRESS_BAR       = 'bar';
+const ID_PROGRESS_LABEL     = 'progress-label';
 
 const MARKER_SRC            = 'images/marker_gold.png';
 const BUTTON_SET_CROP       = 'Set source image crop';
@@ -29,7 +31,7 @@ const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
 const DISSOLVE_FRAC_0 = 0.5;
 const DISSOLVE_FRAC_1 = 0.5;
-const WARP_FRAC_STEP  = 0.1; // should definitely be customizable
+const WARP_FRAC_STEP  = 0.05; // should definitely be customizable
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -47,7 +49,7 @@ const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
 
 // Animation parameters
 const NUM_WORKERS = 2;
-const GIF_QUALITY = 19; // lower is better
+const GIF_QUALITY = 19; // lower means higher quality
 
 // For debugging aid
 const SHOW_OUTPUT_TRIANGULATION = false;
@@ -480,13 +482,14 @@ function createAnimatedSequence(fromPts, toPts, step) {
     height: imgFrom.clientHeight
   });
   
-  var bar = document.getElementById('bar');
+  var bar   = document.getElementById(ID_PROGRESS_BAR);
+  var label = document.getElementById(ID_PROGRESS_LABEL);
   var frame = document.createElement('canvas');
   
   function setForwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = ((1.0 - t) * 50) + '%';
-    bar.innerHTML = bar.style.width;
+    label.innerHTML = bar.style.width;
     if (t > 0.0) {
       t = Math.max(t - step, 0.0);
       setTimeout(setForwardFrames.bind(null, t), 0);
@@ -497,7 +500,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
   function setBackwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = (50 + t * 50) + '%';
-    bar.innerHTML = bar.style.width;
+    label.innerHTML = bar.style.width;
     if (t < 1.0) {
       t = Math.min(t + step, 1.0);
       setTimeout(setBackwardFrames.bind(null, t), 0);
