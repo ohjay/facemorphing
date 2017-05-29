@@ -466,8 +466,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
 
 function setNextFrame(gif, frame, fromPts, toPts, t) {
   var mi = getMidpoints(fromPts, toPts, t);
-  var tr = Delaunay.triangulate(mi);
-  computeMidpointImage(mi, tr, fromPts, toPts, frame, t, 1.0 - t);
+  computeMidpointImage(mi, triangles, fromPts, toPts, frame, t, 1.0 - t);
   gif.addFrame(frame, {copy: true, delay: 100}); // TODO: set this delay more adaptively
 }
 
@@ -777,8 +776,10 @@ $(document).ready(function() {
         toggleCamera();
         break;
       case BACKSLASH:
-        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE ||
-            bigGreenButton.innerText == BUTTON_LABEL_COMPUTE) {
+        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+          finalizePointSelection();
+        }
+        if (bigGreenButton.innerText == BUTTON_LABEL_COMPUTE) {
           createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], WARP_FRAC_STEP);
         }
         break;
