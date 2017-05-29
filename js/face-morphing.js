@@ -45,6 +45,10 @@ const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
                     [152, 78, 163], [255, 127, 0], [255, 222, 0],
                     [166, 86, 40], [247, 129, 191], [153, 153, 153]];
 
+// Animation parameters
+const NUM_WORKERS = 2;
+const GIF_QUALITY = 19; // lower is better
+
 // For debugging aid
 const SHOW_OUTPUT_TRIANGULATION = false;
 const WARP_SINGLE = -1; // -1, 0, or, 1
@@ -460,23 +464,33 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
   }
 }
 
+function setNextFrame(gif, frame, fromPts, toPts, t) {
+  var mi = getMidpoints(fromPts, toPts, t);
+  var tr = Delaunay.triangulate(mi);
+  computeMidpointImage(mi, tr, fromPts, toPts, frame);
+  gif.addFrame(frame, {copy: true, delay: 100});
+}
+
 function createAnimatedSequence(fromPts, toPts, step) {
   var imgFrom = document.getElementById(ID_IMG_FROM);
   var animatedSequence = new GIF({
-    workers: 2,
-    quality: 10,
+    workers: NUM_WORKERS,
+    quality: GIF_QUALITY,
     width: imgFrom.clientWidth,
     height: imgFrom.clientHeight
   });
   
+  var bar = document.getElementById('bar');
   var frame = document.createElement('canvas');
-  var frameCtx = frame.getContext('2d');
   for (var t = 1.0; t >= 0.0; t = Math.max(t - step, 0.0)) {
-    var mi = getMidpoints(fromPts, toPts, t);
-    var tr = Delaunay.triangulate(mi);
-    computeMidpointImage(mi, tr, points[ID_IMG_FROM], points[ID_IMG_TO], frame);
-    animatedSequence.addFrame(frameCtx, {copy: true, delay: 100});
+    setNextFrame(animatedSequence, frame, fromPts, toPts, t);
+    bar.style.width = ((1.0 - t) * 50) + '%';
     if (t == 0.0) break;
+  }
+  for (var t = 0.0; t <= 1.0; t = Math.min(t + step, 1.0)) {
+    setNextFrame(animatedSequence, frame, fromPts, toPts, t);
+    bar.style.width = (50 + t * 100) + '%';
+    if (t == 1.0) break;
   }
   
   animatedSequence.on('finished', function(blob) {
