@@ -486,6 +486,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
   function setForwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = ((1.0 - t) * 50) + '%';
+    bar.innerHTML = bar.style.width;
     if (t > 0.0) {
       t = Math.max(t - step, 0.0);
       setTimeout(setForwardFrames.bind(null, t), 0);
@@ -496,6 +497,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
   function setBackwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = (50 + t * 50) + '%';
+    bar.innerHTML = bar.style.width;
     if (t < 1.0) {
       t = Math.min(t + step, 1.0);
       setTimeout(setBackwardFrames.bind(null, t), 0);
