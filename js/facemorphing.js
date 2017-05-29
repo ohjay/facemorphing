@@ -67,6 +67,7 @@ var midpoints, triangles; // to be filled in after triangulation
 var bigGreenButton;
 var cropper;
 var currentCropId; // ID of image currently being cropped
+var gifCreated = false;
 
 var cameraStream;
 var cameraOn = false;
@@ -779,7 +780,9 @@ $(document).ready(function() {
         if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
           finalizePointSelection();
         }
-        if (bigGreenButton.innerText == BUTTON_LABEL_COMPUTE) {
+        if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE ||
+             bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD) && !gifCreated) {
+          gifCreated = true;
           createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], WARP_FRAC_STEP);
         }
         break;
