@@ -370,7 +370,7 @@ function colorPixel(data, idx, src0Color, src1Color, t0, t1) {
 /*
  * Determines the midpoint image, then renders it on CVS (a canvas).
  */
-function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
+function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df1) {
   var idx0, idx1, idx2;
   var fromTri, toTri, targetTri;
   var X0, X1, Y, A0, A1;
@@ -425,8 +425,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
       yfl = Math.floor(midCoords[1][j]);
       finalIdx = (yfl * width + xfl) * 4;
       
-      colorPixel(finalData, finalIdx, src0Color, src1Color,
-          DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
+      colorPixel(finalData, finalIdx, src0Color, src1Color, df0, df1);
     }
   }
   
@@ -451,8 +450,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
           src0Color = sample(src0X, src0Y, fromData, width, height);
           src1Color = sample(src1X, src1Y, toData,   width, height);
           
-          colorPixel(finalData, i - 3, src0Color, src1Color,
-              DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
+          colorPixel(finalData, i - 3, src0Color, src1Color, df0, df1);
           break;
         }
       }
@@ -469,8 +467,8 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs) {
 function setNextFrame(gif, frame, fromPts, toPts, t) {
   var mi = getMidpoints(fromPts, toPts, t);
   var tr = Delaunay.triangulate(mi);
-  computeMidpointImage(mi, tr, fromPts, toPts, frame);
-  gif.addFrame(frame, {copy: true, delay: 100});
+  computeMidpointImage(mi, tr, fromPts, toPts, frame, t, 1.0 - t);
+  gif.addFrame(frame, {copy: true, delay: 100}); // TODO: set this delay more adaptively
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
@@ -731,7 +729,8 @@ $(document).ready(function() {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
-          points[ID_IMG_TO], document.getElementById(ID_CVS_OUT));
+          points[ID_IMG_TO], document.getElementById(ID_CVS_OUT),
+          DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
       this.innerText = BUTTON_LABEL_DOWNLOAD;
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
