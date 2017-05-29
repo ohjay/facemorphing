@@ -482,21 +482,32 @@ function createAnimatedSequence(fromPts, toPts, step) {
   
   var bar = document.getElementById('bar');
   var frame = document.createElement('canvas');
-  for (var t = 1.0; t >= 0.0; t = Math.max(t - step, 0.0)) {
+  
+  function setForwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = ((1.0 - t) * 50) + '%';
-    if (t == 0.0) break;
+    if (t > 0.0) {
+      t = Math.max(t - step, 0.0);
+      setTimeout(setForwardFrames.bind(null, t), 0);
+    } else {
+      setBackwardFrames(0.0);
+    }
   }
-  for (var t = 0.0; t <= 1.0; t = Math.min(t + step, 1.0)) {
+  function setBackwardFrames(t) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
-    bar.style.width = (50 + t * 100) + '%';
-    if (t == 1.0) break;
+    bar.style.width = (50 + t * 50) + '%';
+    if (t < 1.0) {
+      t = Math.min(t + step, 1.0);
+      setTimeout(setBackwardFrames.bind(null, t), 0);
+    } else {
+      animatedSequence.render();
+    }
   }
   
   animatedSequence.on('finished', function(blob) {
     window.open(URL.createObjectURL(blob));
   });
-  animatedSequence.render();
+  setForwardFrames(1.0); // set the ball rolling
 }
 
 function fillOutputCanvas(finalData, cvs, width, height) {
