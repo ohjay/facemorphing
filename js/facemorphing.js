@@ -19,6 +19,7 @@ const ID_INPUT_UPLOAD_TO    = 'upload-to';
 const ID_OUTER_CONTAINER    = 'outer-container';
 const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
+const ID_CAMERA             = 'camera';
 
 const MARKER_SRC            = 'images/marker_gold.png';
 const BUTTON_SET_CROP       = 'Set source image crop';
@@ -524,16 +525,16 @@ function fillOutputCanvas(finalData, cvs, width, height) {
   cvs.style.display = 'inline'; // show canvas
 }
 
-function setupCanvas(canvasId, imageId) {
-  var cvs = document.getElementById(canvasId);
-  var img = document.getElementById(imageId);
+function overlay(elemId, imageId) {
+  var elem   = document.getElementById(elemId);
+  var img    = document.getElementById(imageId);
   var imgPos = findPosition(img);
   
-  cvs.style.position = 'absolute';
-  cvs.style.left = imgPos[0] + 'px';
-  cvs.style.top = imgPos[1] + 'px';
-  cvs.width = img.clientWidth;
-  cvs.height = img.clientHeight;
+  elem.style.position = 'absolute';
+  elem.style.left     = imgPos[0] + 'px';
+  elem.style.top      = imgPos[1] + 'px';
+  elem.width          = img.clientWidth;
+  elem.height         = img.clientHeight;
 }
 
 function finalizePointSelection() {
@@ -594,11 +595,11 @@ function downloadImage(canvasId) {
  * Code reference: https://github.com/eduardolundgren/tracking.js
  */
 function toggleCamera() {
-  var camera = document.getElementById('camera');
+  var camera = document.getElementById(ID_CAMERA);
   if (cameraOn) {
-    camera.pause(); camera.src = '';
-    cameraStream.getTracks()[0].stop();
+    camera.pause(); camera.src = ''; cameraStream.getTracks()[0].stop();
     window.cancelAnimationFrame(requestId); // stop requesting frames
+    camera.style.display = 'none';
   } else {
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||
@@ -646,6 +647,7 @@ function toggleCamera() {
       });
     };
     requestAnimationFrame_();
+    camera.style.display = 'inline';
   }
   cameraOn = !cameraOn;
 }
@@ -741,8 +743,14 @@ $(document).ready(function() {
   });
   
   // Canvas setup
-  setupCanvas(ID_CVS_FROM, ID_IMG_FROM);
-  setupCanvas(ID_CVS_TO, ID_IMG_TO);
+  overlay(ID_CVS_FROM, ID_IMG_FROM);
+  overlay(ID_CVS_TO, ID_IMG_TO);
+  
+  // Video (camera) setup
+  overlay(ID_CAMERA, ID_IMG_FROM);
+  var camera = document.getElementById(ID_CAMERA);
+  camera.style.zIndex  = '100';
+  camera.style.display = 'none';
   
   // Image upload
   document.getElementById(ID_INPUT_UPLOAD_FROM).addEventListener('change', function() {
