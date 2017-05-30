@@ -590,7 +590,7 @@ function downloadImage(canvasId) {
 
 /*
  * Starts the user's camera if it is currently off.
- * Stops the user's camera if it is currently on.
+ * Stops  the user's camera if it is currently on.
  *
  * Code reference: https://github.com/eduardolundgren/tracking.js
  */
@@ -607,7 +607,10 @@ function toggleCamera() {
 
     // Note that the following function requires HTTPS in Chrome
     window.navigator.getUserMedia({
-      video: true,
+      video: {
+        width:  camera.width,
+        height: camera.height
+      },
       audio: false
     }, function(stream) {
       cameraStream = stream;
