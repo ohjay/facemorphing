@@ -77,11 +77,14 @@ img {
 
 #camera-wrapper {
   overflow: hidden;
+  display:  none;
 }
 
 #camera {
   object-fit: cover;
   object-position: center;
-  width: 100%;
-  height: 100%;
+  width:   100%;
+  height:  100%;
+  z-index: 100;
+  display: none;
 }

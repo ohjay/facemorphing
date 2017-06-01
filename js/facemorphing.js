@@ -605,10 +605,12 @@ function downloadImage(canvasId) {
  * Code reference: https://github.com/eduardolundgren/tracking.js
  */
 function toggleCamera() {
-  var camera = document.getElementById(ID_CAMERA);
+  var camera        = document.getElementById(ID_CAMERA);
+  var cameraWrapper = document.getElementById(ID_CAMERA_WRAPPER);
   if (cameraOn) {
     camera.pause(); camera.src = ''; cameraStream.getTracks()[0].stop();
     camera.style.display = 'none';
+    cameraWrapper.style.display = 'none';
   } else {
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||
@@ -633,6 +635,7 @@ function toggleCamera() {
     });
 
     camera.style.display = 'inline';
+    cameraWrapper.style.display = 'block';
     disableUploads();
     bigGreenButton.innerText = BUTTON_LABEL_FREEZE;
   }
@@ -656,14 +659,15 @@ function freezeCameraFrame(imgId) {
 
   var wDisp = (width  <= vwidth)  ? 1 : width / vwidth;
   var hDisp = (height <= vheight) ? 1 : height / vheight;
-  if (wDisp > hDisp) { vwidth *= wDisp; vheight *= wDisp; }
-  else { vwidth *= hDisp; vheight *= hDisp; }
+  var disp  = (wDisp > hDisp) ? wDisp : hDisp;
+  vwidth *= disp; vheight *= disp;
 
   var sx = (vwidth  - width)  / 2;
   var sy = (vheight - height) / 2;
 
   var cvs = document.createElement('canvas');
-  cvs.getContext('2d').drawImage(camera, sx, sy, width, height, 0, 0, width, height);
+  cvs.width = width; cvs.height = height;
+  cvs.getContext('2d').drawImage(camera, sx, sy, width, height, 0, 0, width * disp, height * disp);
   img.src = cvs.toDataURL('image/png');
 
   // Turn off the camera
@@ -769,9 +773,6 @@ $(document).ready(function() {
   
   // Video (camera) setup
   overlay(ID_CAMERA_WRAPPER, ID_IMG_FROM);
-  var camera = document.getElementById(ID_CAMERA);
-  camera.style.zIndex  = '100';
-  camera.style.display = 'none';
   
   // Image upload
   document.getElementById(ID_INPUT_UPLOAD_FROM).addEventListener('change', function() {
