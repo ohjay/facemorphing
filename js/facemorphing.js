@@ -20,6 +20,7 @@ const ID_OUTER_CONTAINER    = 'outer-container';
 const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
+const ID_CAMERA_WRAPPER     = 'camera-wrapper';
 
 const MARKER_SRC            = 'images/marker_gold.png';
 const BUTTON_SET_CROP       = 'Set source image crop';
@@ -533,8 +534,11 @@ function overlay(elemId, imageId) {
   elem.style.position = 'absolute';
   elem.style.left     = imgPos[0] + 'px';
   elem.style.top      = imgPos[1] + 'px';
-  elem.width          = img.clientWidth;
-  elem.height         = img.clientHeight;
+  elem.style.width    = img.clientWidth  + 'px';
+  elem.style.height   = img.clientHeight + 'px';
+  
+  elem.width  = img.clientWidth;
+  elem.height = img.clientHeight;
 }
 
 function finalizePointSelection() {
@@ -569,6 +573,10 @@ function automaticFeatureDetection(id) {
   ctracker.start(cvs);
   
   var onConvergence = function(evt) {
+    while (currMarkerId > 0) {
+      var markerElt = document.getElementById('marker' + --currMarkerId);
+      document.body.removeChild(markerElt);
+    }
     points[id] = ctracker.getCurrentPosition();
     drawMarkers(id, findPosition(img));
     if (id == ID_IMG_FROM) {
@@ -750,7 +758,7 @@ $(document).ready(function() {
   overlay(ID_CVS_TO, ID_IMG_TO);
   
   // Video (camera) setup
-  overlay(ID_CAMERA, ID_IMG_FROM);
+  overlay(ID_CAMERA_WRAPPER, ID_IMG_FROM);
   var camera = document.getElementById(ID_CAMERA);
   camera.style.zIndex  = '100';
   camera.style.display = 'none';
