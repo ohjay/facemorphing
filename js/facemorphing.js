@@ -575,10 +575,6 @@ function automaticFeatureDetection(id) {
   ctracker.start(cvs);
   
   var onConvergence = function(evt) {
-    while (currMarkerId > 0) {
-      var markerElt = document.getElementById('marker' + --currMarkerId);
-      document.body.removeChild(markerElt);
-    }
     points[id] = ctracker.getCurrentPosition();
     drawMarkers(id, findPosition(img));
     if (id == ID_IMG_FROM) {
@@ -799,6 +795,10 @@ $(document).ready(function() {
         break;
       case ENTER:
         if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+          while (currMarkerId > 0) {
+            var markerElt = document.getElementById('marker' + --currMarkerId);
+            document.body.removeChild(markerElt);
+          }
           // Run automatic feature detection
           automaticFeatureDetection(ID_IMG_FROM);
         }
