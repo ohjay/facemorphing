@@ -23,13 +23,16 @@ const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
 
 const MARKER_SRC            = 'images/marker_gold.png';
-const BUTTON_SET_CROP       = 'Set source image crop';
+const BUTTON_LABEL_CROP     = 'Set source image crop';
+const BUTTON_LABEL_FREEZE   = 'Freeze camera image';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
 const BUTTON_LABEL_COMPUTE  = 'Compute midpoint image';
 const BUTTON_LABEL_DOWNLOAD = 'Download output image';
-const BUTTON_REFRESH        = 'Start over again';
+const BUTTON_LABEL_REFRESH  = 'Start over again';
 const UPLOAD_PROMPT         = 'Replace this image';
 const UPLOAD_DISABLED_TXT   = 'Replace this image';
+
+const FREEZE_ERROR = 'Cannot freeze a nonexistent camera frame.';
 
 const DISSOLVE_FRAC_0 = 0.5;
 const DISSOLVE_FRAC_1 = 0.5;
@@ -73,7 +76,6 @@ var gifCreated = false;
 
 var cameraStream;
 var cameraOn = false;
-var requestId; // for camera frames
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -606,7 +608,6 @@ function toggleCamera() {
   var camera = document.getElementById(ID_CAMERA);
   if (cameraOn) {
     camera.pause(); camera.src = ''; cameraStream.getTracks()[0].stop();
-    window.cancelAnimationFrame(requestId); // stop requesting frames
     camera.style.display = 'none';
   } else {
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
@@ -631,36 +632,42 @@ function toggleCamera() {
       throw Error('Cannot capture user camera.');
     });
 
-    var cvs = document.createElement('canvas');
-    var ctx = cvs.getContext('2d');
-    var width, height;
-
-    var resizeCanvas_ = function() {
-      width = camera.offsetWidth;
-      height = camera.offsetHeight;
-      cvs.width = width;
-      cvs.height = height;
-    };
-    resizeCanvas_();
-    camera.addEventListener('resize', resizeCanvas_);
-
-    // Process individual frames
-    var requestAnimationFrame_ = function() {
-      requestId = window.requestAnimationFrame(function() {
-        if (camera.readyState === camera.HAVE_ENOUGH_DATA) {
-          try {
-            ctx.drawImage(camera, 0, 0, width, height);
-          } catch (err) {}
-          var data = ctx.getImageData(0, 0, width, height).data;
-          // Do something with the image data
-        }
-        requestAnimationFrame_();
-      });
-    };
-    requestAnimationFrame_();
     camera.style.display = 'inline';
+    disableUploads();
+    bigGreenButton.innerText = BUTTON_LABEL_FREEZE;
   }
   cameraOn = !cameraOn;
+}
+
+function freezeCameraFrame(imgId) {
+  // Assert that the camera is actually on
+  if (!cameraOn) {
+    if (typeof Error !== 'undefined') {
+      throw new Error(FREEZE_ERROR)
+    }
+    throw FREEZE_ERROR;
+  }
+
+  // Draw the current camera frame on the image with the given ID
+  var img    = document.getElementById(imgId);
+  var camera = document.getElementById(ID_CAMERA);
+  var vwidth = camera.videoWidth, vheight = camera.videoHeight;
+  var width  = img.clientWidth,   height  = img.clientHeight;
+
+  var wDisp = (width  <= vwidth)  ? 1 : width / vwidth;
+  var hDisp = (height <= vheight) ? 1 : height / vheight;
+  if (wDisp > hDisp) { vwidth *= wDisp; vheight *= wDisp; }
+  else { vwidth *= hDisp; vheight *= hDisp; }
+
+  var sx = (vwidth  - width)  / 2;
+  var sy = (vheight - height) / 2;
+
+  var cvs = document.createElement('canvas');
+  cvs.getContext('2d').drawImage(camera, sx, sy, width, height, 0, 0, width, height);
+  img.src = cvs.toDataURL('image/png');
+
+  // Turn off the camera
+  toggleCamera();
 }
 
 function disableUploads() {
@@ -708,7 +715,7 @@ function handleImageUpload(imgId, inputId) {
     
     // Disable both upload buttons
     disableUploads();
-    bigGreenButton.innerText = BUTTON_SET_CROP;
+    bigGreenButton.innerText = BUTTON_LABEL_CROP;
   }
 
   if (file) {
@@ -726,7 +733,7 @@ $(document).ready(function() {
   // "Big green button" handler
   bigGreenButton = document.getElementById('big-green-btn');
   $('#big-green-btn').click(function(evt) {
-    if (this.innerText == BUTTON_SET_CROP) {
+    if (this.innerText == BUTTON_LABEL_CROP) {
       var otherId = (currentCropId == ID_IMG_FROM) ? ID_IMG_TO : ID_IMG_FROM;
       var otherImg = document.getElementById(otherId);
       var croppedCvs = cropper.getCroppedCanvas({
@@ -738,6 +745,9 @@ $(document).ready(function() {
       img.src = croppedCvs.toDataURL();
       reenableUploads();
       this.innerText = BUTTON_LABEL_FINALIZE;
+    } else if (this.innerText == BUTTON_LABEL_FREEZE) {
+      freezeCameraFrame(ID_IMG_FROM);
+      this.innerText = BUTTON_LABEL_FINALIZE;
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
@@ -747,8 +757,8 @@ $(document).ready(function() {
       this.innerText = BUTTON_LABEL_DOWNLOAD;
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
-      this.innerText = BUTTON_REFRESH;
-    } else if (this.innerText == BUTTON_REFRESH) {
+      this.innerText = BUTTON_LABEL_REFRESH;
+    } else if (this.innerText == BUTTON_LABEL_REFRESH) {
       window.location.reload(false);
     }
   });
@@ -793,7 +803,10 @@ $(document).ready(function() {
         }
         break;
       case SPACE:
-        toggleCamera();
+        if (bigGreenButton.innerText == BUTTON_LABEL_FREEZE ||
+            bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+          toggleCamera();
+        }
         break;
       case BACKSLASH:
         if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
