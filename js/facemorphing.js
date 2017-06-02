@@ -16,6 +16,8 @@ const ID_CVS_TO             = 'canvas-to';
 const ID_CVS_OUT            = 'canvas-output';
 const ID_INPUT_UPLOAD_FROM  = 'upload-from';
 const ID_INPUT_UPLOAD_TO    = 'upload-to';
+const ID_BUTTON_UPLOAD_FROM = 'bupload-from';
+const ID_BUTTON_UPLOAD_TO   = 'bupload-to';
 const ID_OUTER_CONTAINER    = 'outer-container';
 const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
@@ -844,6 +846,12 @@ function freezeCameraFrame(imgId) {
   toggleCamera();
 }
 
+function disableSingle(inputId, buttonId) {
+  document.getElementById(inputId).disabled = true;
+  $('#' + buttonId).addClass('upload-disabled');
+  $('#' + buttonId).text(UPLOAD_DISABLED_TXT);
+}
+
 function disableUploads() {
   document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
   document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
@@ -944,9 +952,7 @@ $(document).ready(function() {
   
   // Canvas setup
   overlay(ID_CVS_FROM, ID_IMG_FROM);
-  if (typeof PATH_JSON_TO == 'undefined') {
-    overlay(ID_CVS_TO, ID_IMG_TO);
-  }
+  overlay(ID_CVS_TO, ID_IMG_TO);
   
   // Video (camera) setup
   overlay(ID_CAMERA_WRAPPER, ID_IMG_FROM);
@@ -959,6 +965,8 @@ $(document).ready(function() {
     document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() {
       handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO);
     }, true);
+  } else {
+    disableSingle(ID_INPUT_UPLOAD_TO, ID_BUTTON_UPLOAD_TO);
   }
 
   // Keypress handler
