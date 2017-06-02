@@ -62,6 +62,7 @@ const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
 const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
+const PATH_JSON_TO     = 'data/austie.json'; // leave blank if nonexistent
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -707,17 +708,17 @@ function serializePoints(id) {
 function importPoints(id, filepath) {
   $.getJSON(filepath, function(data) {
     points[id] = data.points;
-  }).error(function() {
-    console.log('There was a problem with the JSON import.');
   });
 }
 
 function curveThrough(points, id) {
-  /* TODO */
+  /* TODO
+   * (can use `allGroups` to modify already-drawn curves)
+   */
 }
 
 function launchMarkerAdjustment(evt) {
-  if (!evt) {
+  if (!evt || bigGreenButton.innerText != BUTTON_LABEL_FINALIZE) {
     var evt = window.event;
   }
   var target = evt.target || evt.srcElement;
@@ -895,9 +896,17 @@ function handleImageUpload(imgId, inputId) {
 }
 
 $(document).ready(function() {
-  // Point selection click handlers
+  // Set up the points for the destination image
+  if (typeof PATH_JSON_TO != 'undefined') {
+    importPoints(ID_IMG_TO, PATH_JSON_TO);
+    drawMarkers(ID_IMG_TO, findPosition(document.getElementById(ID_IMG_TO)), true);
+  }
+  
+  // Point selection click handler(s)
   $('#from').click(makeGetCoordinates(ID_IMG_FROM));
-  $('#to').click(makeGetCoordinates(ID_IMG_TO));
+  if (typeof PATH_JSON_TO == 'undefined') {
+    $('#to').click(makeGetCoordinates(ID_IMG_TO));
+  }
   
   // "Big green button" handler
   bigGreenButton = document.getElementById('big-green-btn');
@@ -934,7 +943,9 @@ $(document).ready(function() {
   
   // Canvas setup
   overlay(ID_CVS_FROM, ID_IMG_FROM);
-  overlay(ID_CVS_TO, ID_IMG_TO);
+  if (typeof PATH_JSON_TO == 'undefined') {
+    overlay(ID_CVS_TO, ID_IMG_TO);
+  }
   
   // Video (camera) setup
   overlay(ID_CAMERA_WRAPPER, ID_IMG_FROM);
@@ -943,9 +954,11 @@ $(document).ready(function() {
   document.getElementById(ID_INPUT_UPLOAD_FROM).addEventListener('change', function() {
     handleImageUpload(ID_IMG_FROM, ID_INPUT_UPLOAD_FROM);
   }, true);
-  document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() {
-    handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO);
-  }, true);
+  if (typeof PATH_JSON_TO == 'undefined') {
+    document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() {
+      handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO);
+    }, true);
+  }
 
   // Keypress handler
   $(document).on('keydown', function(evt) {
