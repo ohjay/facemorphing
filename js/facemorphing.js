@@ -64,8 +64,8 @@ const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
 const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
-const PATH_JSON_TO     = 'data/austie.json'; // leave blank if nonexistent
-const CALIBRATION      = true; // true if setting points for a new dst image
+const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
+const CALIBRATION      = false; // true if setting points for a new dst image
 
 // Animation parameters
 const NUM_WORKERS = 2;

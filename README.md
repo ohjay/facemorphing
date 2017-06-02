@@ -6,6 +6,7 @@
 - Open up the website.
 - In the console, run
   ```javascript
+  relevId = ID_IMG_TO;
   semiautomaticDetection(ID_IMG_TO); // now move the points around
   serializePoints(ID_IMG_TO); // save the file that opens
   ```
