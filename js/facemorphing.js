@@ -709,7 +709,8 @@ function serializePoints(id) {
 function importPoints(id, filepath) {
   $.getJSON(filepath, function(data) {
     points[id] = data.points;
-    drawMarkers(id, findPosition(document.getElementById(id)), true);
+    var imgPos = findPosition(document.getElementById(id));
+    drawMarkers(id, [imgPos[0] - 5, imgPos[1] - 5], true);
     markerMagic = currMarkerId;
   });
 }
@@ -902,11 +903,9 @@ $(document).ready(function() {
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
     importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
-  }
-  
-  // Point selection click handler(s)
-  $('#from').click(makeGetCoordinates(ID_IMG_FROM));
-  if (typeof PATH_JSON_TO == 'undefined') {
+  } else {
+    // Point selection click handler(s)
+    $('#from').click(makeGetCoordinates(ID_IMG_FROM));
     $('#to').click(makeGetCoordinates(ID_IMG_TO));
   }
   
