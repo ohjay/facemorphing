@@ -24,7 +24,7 @@ const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
 
-const DEFAULT_MARKER_SRC    = 'images/marker_gold.png';
+const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
 const BUTTON_LABEL_FREEZE   = 'Freeze camera image';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
@@ -49,7 +49,7 @@ const SPACE     = 32;
 const BACKSLASH = 220;
 
 // Contrasting markers
-const MARKER_PREFIX = 'images/stroud_';
+const MARKER_PREFIX = 'images/markers/stroud_';
 const MARKER_CYCLE  = ['gold.png', 'blue.png', 'green.png',
                        'red.png', 'purple.png', 'white.png'];
 
