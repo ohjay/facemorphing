@@ -90,9 +90,10 @@ var cameraStream;
 var cameraOn = false;
 
 var relevMarkerNo, relevId, relevPos, relevWidth, relevHeight;
-var allGroups = []; // curve adjustment
-var sdRun     = false;
-var inv       = {}; // marker ID # --> index in respective `points` array
+var allGroups   = []; // curve adjustment
+var sdRun       = false;
+var inv         = {}; // marker ID # --> index in respective `points` array
+var markerMagic = 0;
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -184,7 +185,7 @@ function drawMarkers(id, imgPos, alternating=false, updateInv=false) {
  * Gets rid of all of the markers.
  */
 function getRidOfAllOfTheMarkers() {
-  while (currMarkerId > 0) {
+  while (currMarkerId > markerMagic) {
     var markerElt = document.getElementById('marker' + --currMarkerId);
     document.body.removeChild(markerElt);
   }
@@ -708,6 +709,8 @@ function serializePoints(id) {
 function importPoints(id, filepath) {
   $.getJSON(filepath, function(data) {
     points[id] = data.points;
+    drawMarkers(id, findPosition(document.getElementById(id)), true);
+    markerMagic = currMarkerId;
   });
 }
 
@@ -898,8 +901,7 @@ function handleImageUpload(imgId, inputId) {
 $(document).ready(function() {
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
-    importPoints(ID_IMG_TO, PATH_JSON_TO);
-    drawMarkers(ID_IMG_TO, findPosition(document.getElementById(ID_IMG_TO)), true);
+    importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
   }
   
   // Point selection click handler(s)
