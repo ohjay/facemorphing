@@ -65,6 +65,7 @@ const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
 const PATH_JSON_TO     = 'data/austie.json'; // leave blank if nonexistent
+const CALIBRATION      = true; // true if setting points for a new dst image
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -93,7 +94,7 @@ var cameraOn = false;
 
 var relevMarkerNo, relevId, relevPos, relevWidth, relevHeight;
 var allGroups   = []; // curve adjustment
-var sdRun       = false;
+var sdRun       = 0;  // number of times semiautomatic detection has been run
 var inv         = {}; // marker ID # --> index in respective `points` array
 var markerMagic = 0;
 
@@ -650,15 +651,17 @@ function automaticFeatureDetection(id) {
  * then allows the user to drag those positions around.
  */
 function semiautomaticDetection(id) {
-  if (!sdRun) {
-    getRidOfAllOfTheMarkers();
+  if (sdRun < (CALIBRATION ? 2 : 1)) { // we can run this twice if we're calibrating
+    if (sdRun < 1) {
+      getRidOfAllOfTheMarkers();
+    }
     
     var img = document.getElementById(id);
     var ctracker = startClmtrackr(img);
     var total = (id in points) ? points[id].length : 0;
   
     var i, j, clmPoints, groupSize;
-    var onConvergence = function(evt) {
+    var onConvergence = function(evt) { // TODO: what if it never converges? Time this thing out
       positions = ctracker.getCurrentPosition(); // clmtrackr notation
       for (i = 0; i < CLMTRACKR_SINGLE.length; ++i, ++total) {
         logPoint(positions[CLMTRACKR_SINGLE[i]], id, true);
@@ -694,7 +697,7 @@ function semiautomaticDetection(id) {
       document.removeEventListener('clmtrackrConverged', onConvergence);
     }
     document.addEventListener('clmtrackrConverged', onConvergence, false);
-    sdRun = true;
+    ++sdRun;
   }
 }
 
@@ -910,7 +913,9 @@ function handleImageUpload(imgId, inputId) {
 $(document).ready(function() {
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
-    importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
+    if (!CALIBRATION) {
+      importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
+    }
     semiautomaticDetection(ID_IMG_FROM); // obviously we have to go all the way
   } else {
     // Point selection click handler(s)
