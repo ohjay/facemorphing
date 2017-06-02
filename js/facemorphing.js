@@ -911,6 +911,7 @@ $(document).ready(function() {
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
     importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
+    semiautomaticDetection(ID_IMG_FROM); // obviously we have to go all the way
   } else {
     // Point selection click handler(s)
     $('#from').click(makeGetCoordinates(ID_IMG_FROM));
