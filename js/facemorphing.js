@@ -22,7 +22,7 @@ const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
 
-const MARKER_SRC            = 'images/marker_gold.png';
+const DEFAULT_MARKER_SRC    = 'images/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
 const BUTTON_LABEL_FREEZE   = 'Freeze camera image';
 const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
@@ -40,10 +40,16 @@ const WARP_FRAC_STEP  = 0.05; // should definitely be customizable
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
+const SHIFT     = 16;
 const DELETE    = 46;
 const ENTER     = 13;
 const SPACE     = 32;
 const BACKSLASH = 220;
+
+// Contrasting markers
+const MARKER_PREFIX = 'images/stroud_';
+const MARKER_CYCLE  = ['gold.png', 'blue.png', 'green.png',
+                       'red.png', 'purple.png', 'white.png'];
 
 // Contrasting colors
 const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
@@ -51,6 +57,11 @@ const COLORS_HEX = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
 const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
                     [152, 78, 163], [255, 127, 0], [255, 222, 0],
                     [166, 86, 40], [247, 129, 191], [153, 153, 153]];
+
+// Information for semiautomatic detection
+const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
+const CLMTRACKR_GROUPS = [
+  [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -76,6 +87,11 @@ var gifCreated = false;
 
 var cameraStream;
 var cameraOn = false;
+
+var relevMarkerNo, relevId, relevPos, relevWidth, relevHeight;
+var allGroups = []; // curve adjustment
+var sdRun     = false;
+var inv       = {}; // marker ID # --> index in respective `points` array
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -105,7 +121,7 @@ function makeGetCoordinates(id) {
     }
     
     // Add a marker to the image
-    document.body.appendChild(createMarker('marker' + currMarkerId));
+    document.body.appendChild(createMarker('marker' + currMarkerId, DEFAULT_MARKER_SRC));
     $('#marker' + currMarkerId).css('left', posX - 5).css('top', posY - 5).show();
     ++currMarkerId;
     
@@ -113,36 +129,69 @@ function makeGetCoordinates(id) {
     posY -= imgPos[1];
     
     // Save the local coordinates in a list of points
-    if (!(id in points)) {
-      points[id] = [];
-    }
-    points[id].push([posX, posY]);
-    added.push(id); // because we just added a point to the ID array
+    logPoint([posX, posY], id);
   };
   
   return getCoordinates;
 }
 
 /*
+ * Adds VAL to the array at DICT[KEY].
+ * If the aforementioned array doesn't exist, then this function will create it.
+ */
+function safeInsert(val, key, dict) {
+  if (!(key in dict)) {
+    dict[key] = [];
+  }
+  dict[key].push(val);
+}
+
+function logPoint(p, id, incognito=false) {
+  safeInsert(p, id, points);
+  if (!incognito) {
+    added.push(id); // 'cause we just added a point to the ID array
+  }
+}
+
+/*
  * Draw markers for an already-existent array of points.
  */
-function drawMarkers(id, imgPos) {
+function drawMarkers(id, imgPos, alternating=false, updateInv=false) {
   var relevantPoints = points[id];
   var numPoints = relevantPoints.length;
   var pt;
   
+  var mi = 0, markerSrc = DEFAULT_MARKER_SRC;
   for (var i = 0; i < numPoints; ++i) {
+    if (alternating) {
+      markerSrc = MARKER_PREFIX + MARKER_CYCLE[mi];
+      mi = (mi + 1) % MARKER_CYCLE.length;
+    }
+    
     pt = relevantPoints[i];
-    document.body.appendChild(createMarker('marker' + currMarkerId));
+    document.body.appendChild(createMarker('marker' + currMarkerId, markerSrc));
     $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0])
-                               .css('top', pt[1] + imgPos[1]).show();
+                               .css('top',  pt[1] + imgPos[1]).show();
+    if (updateInv) {
+      inv[currMarkerId] = i;
+    }
     ++currMarkerId;
   }
 }
 
-function createMarker(id) {
+/*
+ * Gets rid of all of the markers.
+ */
+function getRidOfAllOfTheMarkers() {
+  while (currMarkerId > 0) {
+    var markerElt = document.getElementById('marker' + --currMarkerId);
+    document.body.removeChild(markerElt);
+  }
+}
+
+function createMarker(id, markerSrc) {
   var img = document.createElement('img');
-  img.setAttribute('src', MARKER_SRC);
+  img.setAttribute('src', markerSrc);
   img.setAttribute('class', 'marker');
   img.setAttribute('id', id);
   return img;
@@ -561,9 +610,7 @@ function finalizePointSelection() {
   }
 }
 
-function automaticFeatureDetection(id) {
-  var img = document.getElementById(id);
-  
+function startClmtrackr(img) {
   // Virtual canvas used during tracking
   var cvs = document.createElement('canvas');
   var ctx = cvs.getContext('2d');
@@ -574,6 +621,12 @@ function automaticFeatureDetection(id) {
   ctracker.init(pModel);
   ctracker.start(cvs);
   
+  return ctracker;
+}
+
+function automaticFeatureDetection(id) {
+  var img = document.getElementById(id);
+  var ctracker = startClmtrackr(img);
   var onConvergence = function(evt) {
     points[id] = ctracker.getCurrentPosition();
     drawMarkers(id, findPosition(img));
@@ -586,6 +639,122 @@ function automaticFeatureDetection(id) {
   };
   
   document.addEventListener('clmtrackrConverged', onConvergence, false);
+}
+
+/*
+ * Loads initial positions for a selected group of meaningful features,
+ * then allows the user to drag those positions around.
+ */
+function semiautomaticDetection(id) {
+  if (!sdRun) {
+    getRidOfAllOfTheMarkers();
+    
+    var img = document.getElementById(id);
+    var ctracker = startClmtrackr(img);
+    var total = (id in points) ? points[id].length : 0;
+  
+    var i, j, clmPoints, groupSize;
+    var onConvergence = function(evt) {
+      positions = ctracker.getCurrentPosition(); // clmtrackr notation
+      for (i = 0; i < CLMTRACKR_SINGLE.length; ++i, ++total) {
+        logPoint(positions[CLMTRACKR_SINGLE[i]], id, true);
+      }
+      for (i = 0; i < CLMTRACKR_GROUPS.length; ++i) {
+        groupSize = CLMTRACKR_GROUPS[i].length;
+        for (j = 0; j < groupSize; ++j, ++total) {
+          logPoint(positions[CLMTRACKR_GROUPS[i][j]], id, true);
+        }
+      
+        // Plot a curve through the last GROUP_SIZE points
+        curveThrough(points[id].slice(total - groupSize, total), id);
+        safeInsert([total - groupSize, total], id, allGroups);
+      }
+      // Left side points
+      logPoint([0.75 * positions[0][0], positions[0][1]], id, true); ++total;
+      logPoint([0.75 * positions[0][0], positions[2][1]], id, true); ++total;
+      curveThrough(points[id].slice(total - 2, total), id);
+      safeInsert([total - 2, total], id, allGroups);
+      // Right side points
+      var rdx = 0.25 * (img.clientWidth - positions[14][0]);
+      logPoint([rdx + positions[14][0], positions[14][1]], id, true); ++total;
+      logPoint([rdx + positions[14][0], positions[12][1]], id, true); ++total;
+      curveThrough(points[id].slice(total - 2, total), id);
+      safeInsert([total - 2, total], id, allGroups);
+      // Top points
+      logPoint([positions[19][0], 0.30 * positions[19][1]], id, true);
+      logPoint([positions[22][0], 0.25 * positions[22][1]], id, true);
+      logPoint([positions[18][0], 0.25 * positions[18][1]], id, true);
+      logPoint([positions[15][0], 0.30 * positions[15][1]], id, true);
+    
+      drawMarkers(id, findPosition(img), true, true);
+      document.removeEventListener('clmtrackrConverged', onConvergence);
+    }
+    document.addEventListener('clmtrackrConverged', onConvergence, false);
+    sdRun = true;
+  }
+}
+
+function serializePoints(id) {
+  var obj = {
+    'points': points[id]
+  };
+  var jsonData = JSON.stringify(obj);
+  var url = 'data:text/json;charset=utf8,' + encodeURIComponent(jsonData);
+  window.open(url, '_blank');
+  window.focus();
+}
+
+function importPoints(id, filepath) {
+  $.getJSON(filepath, function(data) {
+    points[id] = data.points;
+  }).error(function() {
+    console.log('There was a problem with the JSON import.');
+  });
+}
+
+function curveThrough(points, id) {
+  /* TODO */
+}
+
+function launchMarkerAdjustment(evt) {
+  if (!evt) {
+    var evt = window.event;
+  }
+  var target = evt.target || evt.srcElement;
+  if (!target.id.startsWith('marker')) {
+    return;
+  }
+  
+  var relevImg = document.getElementById(relevId);
+  relevWidth  = relevImg.clientWidth;
+  relevHeight = relevImg.clientHeight;
+  relevMarkerNo = parseInt(target.id.match(/\d+$/)[0], 10);
+  relevPos = findPosition(relevImg);
+  document.addEventListener('mousemove', doMarkerAdjustment);
+  return false;
+}
+
+function doMarkerAdjustment(evt) {
+  if (!evt) {
+    var evt = window.event;
+  }
+  var target = evt.target || evt.srcElement;
+  var inImgCoords = [
+    evt.pageX - relevPos[0],
+    evt.pageY - relevPos[1]
+  ];
+  
+  if (inImgCoords[0] >= 0 && inImgCoords[0] < relevWidth &&
+      inImgCoords[1] >= 0 && inImgCoords[1] < relevHeight) {
+    $('#marker' + relevMarkerNo).css('left', evt.pageX - 5).css('top', evt.pageY - 5);
+    points[relevId][inv[relevMarkerNo]] = inImgCoords;
+  }
+  return false;
+}
+
+function finishMarkerAdjustment(evt) {
+  document.removeEventListener('mousemove', doMarkerAdjustment);
+  return false;
 }
 
 function downloadImage(canvasId) {
@@ -795,10 +964,7 @@ $(document).ready(function() {
         break;
       case ENTER:
         if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
-          while (currMarkerId > 0) {
-            var markerElt = document.getElementById('marker' + --currMarkerId);
-            document.body.removeChild(markerElt);
-          }
+          getRidOfAllOfTheMarkers();
           // Run automatic feature detection
           automaticFeatureDetection(ID_IMG_FROM);
         }
@@ -819,6 +985,16 @@ $(document).ready(function() {
           createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], WARP_FRAC_STEP);
         }
         break;
+      case SHIFT:
+        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+          semiautomaticDetection(ID_IMG_FROM);
+        }
+        break;
     }
   });
+  
+  // Draggable markers
+  relevId = ID_IMG_FROM;
+  document.onmousedown = launchMarkerAdjustment;
+  document.onmouseup   = finishMarkerAdjustment;
 });
