@@ -66,6 +66,7 @@ const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
 const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
 const CALIBRATION      = false; // true if setting points for a new dst image
+const CURVE_COLOR      = '#7fff00';
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -679,14 +680,10 @@ function semiautomaticDetection(id) {
       // Left side points
       logPoint([0.75 * positions[0][0], positions[0][1]], id, true); ++total;
       logPoint([0.75 * positions[0][0], positions[2][1]], id, true); ++total;
-      curveThrough(points[id].slice(total - 2, total), id);
-      safeInsert([total - 2, total], id, allGroups);
       // Right side points
       var rdx = 0.25 * (img.clientWidth - positions[14][0]);
       logPoint([rdx + positions[14][0], positions[14][1]], id, true); ++total;
       logPoint([rdx + positions[14][0], positions[12][1]], id, true); ++total;
-      curveThrough(points[id].slice(total - 2, total), id);
-      safeInsert([total - 2, total], id, allGroups);
       // Top points
       logPoint([positions[19][0], 0.30 * positions[19][1]], id, true);
       logPoint([positions[22][0], 0.25 * positions[22][1]], id, true);
@@ -720,10 +717,27 @@ function importPoints(id, filepath) {
   });
 }
 
-function curveThrough(points, id) {
-  /* TODO
-   * (can use `allGroups` to modify already-drawn curves)
-   */
+/*
+ * Draws a smooth curve through CPOINTS on the canvas implied by ID.
+ * Assumes that there are 3+ values in CPOINTS.
+ */
+function curveThrough(cpoints, id) {
+  var i, xc, yc;
+  var canvasId = (id == ID_IMG_FROM) ? ID_CVS_FROM : ID_CVS_TO;
+  var cvs = document.getElementById(canvasId);
+  var ctx = cvs.getContext('2d');
+
+  ctx.beginPath();
+  ctx.moveTo(cpoints[0][0], cpoints[0][1]);
+  for (i = 1; i < cpoints .length - 2; ++i) {
+    xc = (cpoints[i][0] + cpoints[i + 1][0]) / 2;
+    yc = (cpoints[i][1] + cpoints[i + 1][1]) / 2;
+    ctx.quadraticCurveTo(cpoints[i][0], cpoints[i][1], xc, yc);
+  }
+  ctx.quadraticCurveTo(cpoints[i][0], cpoints[i][1], cpoints[i + 1][0], cpoints[i + 1][1]);
+  ctx.strokeStyle = CURVE_COLOR;
+  ctx.stroke();
+  cvs.style.display = 'inline'; // make sure the canvas is visible
 }
 
 function launchMarkerAdjustment(evt) {
@@ -758,6 +772,7 @@ function doMarkerAdjustment(evt) {
       inImgCoords[1] >= 0 && inImgCoords[1] < relevHeight) {
     $('#marker' + relevMarkerNo).css('left', evt.pageX - 5).css('top', evt.pageY - 5);
     points[relevId][inv[relevMarkerNo]] = inImgCoords;
+    // TODO: use `allGroups` to modify already-drawn curves
   }
   return false;
 }
