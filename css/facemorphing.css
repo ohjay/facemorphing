@@ -88,3 +88,14 @@ img {
   z-index: 100;
   display: none;
 }
+
+.param-inner-wrapper {
+  padding-right: 40px;
+  display: table-cell;
+  vertical-align: middle;
+  height: 40px;
+}
+
+.param-content {
+  vertical-align: middle;
+}

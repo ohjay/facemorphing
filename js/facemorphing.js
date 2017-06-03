@@ -23,6 +23,10 @@ const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
+const ID_NUMFRAMES_INPUT    = 'numframes-input';
+const ID_NUMFRAMES_RANGE    = 'numframes-range';
+const ID_FPS_INPUT          = 'fps-input';
+const ID_FPS_RANGE          = 'fps-range';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -36,9 +40,16 @@ const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
 const FREEZE_ERROR = 'Cannot freeze a nonexistent camera frame.';
 
-const DISSOLVE_FRAC_0 = 0.5;
-const DISSOLVE_FRAC_1 = 0.5;
-const WARP_FRAC_STEP  = 0.01; // should definitely be customizable (TODO)
+const DISSOLVE_FRAC_0  = 0.5;
+const DISSOLVE_FRAC_1  = 0.5;
+const MAX_FRAME_COUNT  = 100;  // from a basic one-way standpoint
+const MIN_FRAME_COUNT  = 2;
+const D_WARP_FRAC_STEP = 0.05; // "d" means default value
+const D_FRAME_COUNT    = 1.0 / D_WARP_FRAC_STEP;
+const MAX_FPS          = 50;
+const MIN_FPS          = 1;
+const D_DELAY          = 50; // equivalent to 20fps
+const D_FPS            = 1000.0 / D_DELAY;
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -47,6 +58,12 @@ const DELETE    = 46;
 const ENTER     = 13;
 const SPACE     = 32;
 const BACKSLASH = 220;
+const NP_ZERO   = 96;
+const NP_NINE   = 105;
+const ZERO      = 48;
+const NINE      = 57;
+const L_ARROW   = 37;
+const R_ARROW   = 39;
 
 // Contrasting markers
 const MARKER_PREFIX = 'images/markers/stroud_';
@@ -89,7 +106,9 @@ var midpoints, triangles; // to be filled in after triangulation
 var bigGreenButton;
 var cropper;
 var currentCropId; // ID of image currently being cropped
-var gifCreated = false;
+var gifCreated   = false;
+var warpFracStep = D_WARP_FRAC_STEP;
+var delay        = D_DELAY;
 
 var cameraStream;
 var cameraOn = false;
@@ -528,7 +547,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
 function setNextFrame(gif, frame, fromPts, toPts, t) {
   var mi = getMidpoints(fromPts, toPts, t);
   computeMidpointImage(mi, triangles, fromPts, toPts, frame, t, 1.0 - t);
-  gif.addFrame(frame, {copy: true, delay: 20}); // TODO: set this delay more adaptively
+  gif.addFrame(frame, {copy: true, delay: delay});
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
@@ -734,10 +753,12 @@ function curveThrough(cpoints, id) {
 }
 
 function drawGroupCurves(groups, id) {
-  var i, g;
-  for (i = 0; i < groups.length; ++i) {
-    g = groups[i];
-    curveThrough(points[id].slice(g[0], g[1]), id);
+  if (id in points) {
+    var i, g;
+    for (i = 0; i < groups.length; ++i) {
+      g = groups[i];
+      curveThrough(points[id].slice(g[0], g[1]), id);
+    }
   }
 }
 
@@ -784,7 +805,6 @@ function doMarkerAdjustment(evt) {
 
 function finishMarkerAdjustment(evt) {
   document.removeEventListener('mousemove', doMarkerAdjustment);
-  return false;
 }
 
 function downloadImage(canvasId) {
@@ -930,6 +950,56 @@ function handleImageUpload(imgId, inputId) {
   }
 }
 
+function validateIntegralInput(evt, ninput, minVal, maxVal, defaultVal) {
+  if (!(
+    evt.keyCode >= NP_ZERO && evt.keyCode <= NP_NINE   ||
+    evt.keyCode >= ZERO    && evt.keyCode <= NINE      ||
+    evt.keyCode == L_ARROW || evt.keyCode == R_ARROW   ||
+    evt.keyCode == DELETE  || evt.keyCode == BACKSPACE
+  )) {
+    return null; // ensure that the input is either a number or a backspace/delete
+  }
+  
+  if (ninput > maxVal && !(evt.keyCode in [DELETE, BACKSPACE])) {
+    evt.preventDefault();
+    return maxVal;
+  } else if (ninput < minVal && !(evt.keyCode in [DELETE, BACKSPACE])) {
+    evt.preventDefault();
+    return minVal;
+  } else if (ninput == '' || ninput == null) {
+    return defaultVal;
+  }
+  
+  return ninput;
+}
+
+function configureInputs() {
+  // Number of frames <-> warp fraction increment
+  $('#' + ID_NUMFRAMES_INPUT).on('keydown keyup', function(evt) {
+    var validated = validateIntegralInput(
+      evt, this.value, MAX_FRAME_COUNT, MIN_FRAME_COUNT, D_FRAME_COUNT);
+    if (validated !== null) {
+      $(this).val(validated);
+    }
+    warpFracStep = 1.0 / this.value;
+  });
+  $('#' + ID_NUMFRAMES_RANGE).on('input', function() {
+    warpFracStep = 1.0 / this.value;
+  });
+  
+  // Frames per second <-> frame delay
+  $('#' + ID_FPS_INPUT).on('keydown keyup', function(evt) {
+    var validated = validateIntegralInput(evt, this.value, MAX_FPS, MIN_FPS, D_FPS);
+    if (validated !== null) {
+      $(this).val(validated);
+    }
+    delay = 1000.0 / this.value;
+  });
+  $('#' + ID_FPS_RANGE).on('input', function() {
+    delay = 1000.0 / this.value;
+  });
+}
+
 $(document).ready(function() {
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
@@ -1032,7 +1102,7 @@ $(document).ready(function() {
         if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE ||
              bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD) && !gifCreated) {
           gifCreated = true;
-          createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], WARP_FRAC_STEP);
+          createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
         }
         break;
       case SHIFT:
@@ -1047,4 +1117,7 @@ $(document).ready(function() {
   relevId = ID_IMG_FROM;
   document.onmousedown = launchMarkerAdjustment;
   document.onmouseup   = finishMarkerAdjustment;
+  
+  // Input setup
+  configureInputs();
 });
