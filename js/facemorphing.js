@@ -67,6 +67,7 @@ const CLMTRACKR_GROUPS = [
 const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
 const CALIBRATION      = false; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
+const TENSION          = 0.8; // higher if anxious
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -689,7 +690,7 @@ function semiautomaticDetection(id) {
       logPoint([positions[22][0], 0.25 * positions[22][1]], id, true);
       logPoint([positions[18][0], 0.25 * positions[18][1]], id, true);
       logPoint([positions[15][0], 0.30 * positions[15][1]], id, true);
-    
+
       drawMarkers(id, findPosition(img), true, true);
       document.removeEventListener('clmtrackrConverged', onConvergence);
     }
@@ -719,22 +720,14 @@ function importPoints(id, filepath) {
 
 /*
  * Draws a smooth curve through CPOINTS on the canvas implied by ID.
- * Assumes that there are 3+ values in CPOINTS.
  */
 function curveThrough(cpoints, id) {
-  var i, xc, yc;
   var canvasId = (id == ID_IMG_FROM) ? ID_CVS_FROM : ID_CVS_TO;
   var cvs = document.getElementById(canvasId);
   var ctx = cvs.getContext('2d');
 
-  ctx.beginPath();
-  ctx.moveTo(cpoints[0][0], cpoints[0][1]);
-  for (i = 1; i < cpoints .length - 2; ++i) {
-    xc = (cpoints[i][0] + cpoints[i + 1][0]) / 2;
-    yc = (cpoints[i][1] + cpoints[i + 1][1]) / 2;
-    ctx.quadraticCurveTo(cpoints[i][0], cpoints[i][1], xc, yc);
-  }
-  ctx.quadraticCurveTo(cpoints[i][0], cpoints[i][1], cpoints[i + 1][0], cpoints[i + 1][1]);
+  cpoints = [].concat.apply([], cpoints);
+  ctx.drawCurve(cpoints.map(function(n) { return n + 5; }), TENSION);
   ctx.strokeStyle = CURVE_COLOR;
   ctx.stroke();
   cvs.style.display = 'inline'; // make sure the canvas is visible
