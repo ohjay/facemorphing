@@ -94,7 +94,7 @@ var gifCreated = false;
 var cameraStream;
 var cameraOn = false;
 
-var relevMarkerNo, relevId, relevPos, relevWidth, relevHeight;
+var relevMarkerNo, relevId, relevPos, relevWidth, relevHeight, relevCtx;
 var allGroups   = []; // curve adjustment
 var sdRun       = 0;  // number of times semiautomatic detection has been run
 var inv         = {}; // marker ID # --> index in respective `points` array
@@ -177,8 +177,8 @@ function drawMarkers(id, imgPos, alternating=false, updateInv=false) {
     
     pt = relevantPoints[i];
     document.body.appendChild(createMarker('marker' + currMarkerId, markerSrc));
-    $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0])
-                               .css('top',  pt[1] + imgPos[1]).show();
+    $('#marker' + currMarkerId).css('left', pt[0] + imgPos[0] - 5)
+                               .css('top',  pt[1] + imgPos[1] - 5).show();
     if (updateInv) {
       inv[currMarkerId] = i;
     }
@@ -676,7 +676,7 @@ function semiautomaticDetection(id) {
       
         // Plot a curve through the last GROUP_SIZE points
         curveThrough(points[id].slice(total - groupSize, total), id);
-        safeInsert([total - groupSize, total], id, allGroups);
+        allGroups.push([total - groupSize, total]);
       }
       // Left side points
       logPoint([0.75 * positions[0][0], positions[0][1]], id, true); ++total;
@@ -713,7 +713,7 @@ function importPoints(id, filepath) {
   $.getJSON(filepath, function(data) {
     points[id] = data.points;
     var imgPos = findPosition(document.getElementById(id));
-    drawMarkers(id, [imgPos[0] - 5, imgPos[1] - 5], true);
+    drawMarkers(id, [imgPos[0], imgPos[1]], true);
     markerMagic = currMarkerId;
   });
 }
@@ -726,11 +726,18 @@ function curveThrough(cpoints, id) {
   var cvs = document.getElementById(canvasId);
   var ctx = cvs.getContext('2d');
 
-  cpoints = [].concat.apply([], cpoints);
-  ctx.drawCurve(cpoints.map(function(n) { return n + 5; }), TENSION);
+  ctx.drawCurve([].concat.apply([], cpoints), TENSION);
   ctx.strokeStyle = CURVE_COLOR;
   ctx.stroke();
   cvs.style.display = 'inline'; // make sure the canvas is visible
+}
+
+function drawGroupCurves(groups, id) {
+  var i, g;
+  for (i = 0; i < groups.length; ++i) {
+    g = groups[i];
+    curveThrough(points[id].slice(g[0], g[1]), id);
+  }
 }
 
 function launchMarkerAdjustment(evt) {
@@ -742,6 +749,9 @@ function launchMarkerAdjustment(evt) {
     return;
   }
   
+  var canvasId = (relevId == ID_IMG_FROM) ? ID_CVS_FROM : ID_CVS_TO;
+  relevCtx = document.getElementById(canvasId).getContext('2d');
+
   var relevImg = document.getElementById(relevId);
   relevWidth  = relevImg.clientWidth;
   relevHeight = relevImg.clientHeight;
@@ -765,7 +775,8 @@ function doMarkerAdjustment(evt) {
       inImgCoords[1] >= 0 && inImgCoords[1] < relevHeight) {
     $('#marker' + relevMarkerNo).css('left', evt.pageX - 5).css('top', evt.pageY - 5);
     points[relevId][inv[relevMarkerNo]] = inImgCoords;
-    // TODO: use `allGroups` to modify already-drawn curves
+    relevCtx.clearRect(0, 0, relevWidth, relevHeight);
+    drawGroupCurves(allGroups, relevId);
   }
   return false;
 }
@@ -925,6 +936,7 @@ $(document).ready(function() {
       importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
     }
     semiautomaticDetection(ID_IMG_FROM); // obviously we have to go all the way
+    drawGroupCurves(allGroups, ID_IMG_TO);
   } else {
     // Point selection click handler(s)
     $('#from').click(makeGetCoordinates(ID_IMG_FROM));
