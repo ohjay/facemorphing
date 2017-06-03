@@ -38,7 +38,7 @@ const FREEZE_ERROR = 'Cannot freeze a nonexistent camera frame.';
 
 const DISSOLVE_FRAC_0 = 0.5;
 const DISSOLVE_FRAC_1 = 0.5;
-const WARP_FRAC_STEP  = 0.05; // should definitely be customizable
+const WARP_FRAC_STEP  = 0.01; // should definitely be customizable (TODO)
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -528,7 +528,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
 function setNextFrame(gif, frame, fromPts, toPts, t) {
   var mi = getMidpoints(fromPts, toPts, t);
   computeMidpointImage(mi, triangles, fromPts, toPts, frame, t, 1.0 - t);
-  gif.addFrame(frame, {copy: true, delay: 100}); // TODO: set this delay more adaptively
+  gif.addFrame(frame, {copy: true, delay: 20}); // TODO: set this delay more adaptively
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
@@ -652,7 +652,7 @@ function automaticFeatureDetection(id) {
  * Loads initial positions for a selected group of meaningful features,
  * then allows the user to drag those positions around.
  */
-function semiautomaticDetection(id) {
+function semiautomaticDetection(id, cfnZero) {
   if (sdRun < (CALIBRATION ? 2 : 1)) { // we can run this twice if we're calibrating
     if (sdRun < 1) {
       getRidOfAllOfTheMarkers();
@@ -692,6 +692,7 @@ function semiautomaticDetection(id) {
       logPoint([positions[15][0], 0.30 * positions[15][1]], id, true);
 
       drawMarkers(id, findPosition(img), true, true);
+      if (typeof cfnZero !== 'undefined') { cfnZero(); }
       document.removeEventListener('clmtrackrConverged', onConvergence);
     }
     document.addEventListener('clmtrackrConverged', onConvergence, false);
@@ -935,8 +936,9 @@ $(document).ready(function() {
     if (!CALIBRATION) {
       importPoints(ID_IMG_TO, PATH_JSON_TO); // this will draw the markers too
     }
-    semiautomaticDetection(ID_IMG_FROM); // obviously we have to go all the way
-    drawGroupCurves(allGroups, ID_IMG_TO);
+    semiautomaticDetection(ID_IMG_FROM, function() { // obv we have to go all the way
+      drawGroupCurves(allGroups, ID_IMG_TO);
+    });
   } else {
     // Point selection click handler(s)
     $('#from').click(makeGetCoordinates(ID_IMG_FROM));
