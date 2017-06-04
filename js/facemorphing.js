@@ -78,6 +78,7 @@ const COLORS_RGB = [[228, 26, 28], [55, 126, 184], [77, 175, 74],
                     [166, 86, 40], [247, 129, 191], [153, 153, 153]];
 
 // Information for semiautomatic detection
+const TRACKR_TIMEOUT   = 10000; // ms
 const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
@@ -650,10 +651,22 @@ function startClmtrackr(img) {
   return ctracker;
 }
 
+function clmtrackrTimeout(ctracker, onConvergence, timeout, info) {
+  setTimeout(function() { // just in case the tracker never converges
+    ctracker.stop();
+    if (!info.hasConverged) {
+      onConvergence(); // use whatever points we've got
+    }
+  }, timeout);
+}
+
 function automaticFeatureDetection(id) {
   var img = document.getElementById(id);
   var ctracker = startClmtrackr(img);
+
+  var info = {hasConverged: false};
   var onConvergence = function(evt) {
+    info.hasConverged = true;
     points[id] = ctracker.getCurrentPosition();
     drawMarkers(id, findPosition(img));
     if (id == ID_IMG_FROM) {
@@ -664,6 +677,7 @@ function automaticFeatureDetection(id) {
     document.removeEventListener('clmtrackrConverged', onConvergence);
   };
   
+  clmtrackrTimeout(ctracker, onConvergence, TRACKR_TIMEOUT, info);
   document.addEventListener('clmtrackrConverged', onConvergence, false);
 }
 
@@ -680,9 +694,11 @@ function semiautomaticDetection(id, cfnZero) {
     var img = document.getElementById(id);
     var ctracker = startClmtrackr(img);
     var total = (id in points) ? points[id].length : 0;
-  
+
     var i, j, clmPoints, groupSize;
-    var onConvergence = function(evt) { // TODO: what if it never converges? Time this thing out
+    var info = {hasConverged: false};
+    var onConvergence = function(evt) {
+      info.hasConverged = true;
       positions = ctracker.getCurrentPosition(); // clmtrackr notation
       for (i = 0; i < CLMTRACKR_SINGLE.length; ++i, ++total) {
         logPoint(positions[CLMTRACKR_SINGLE[i]], id, true);
@@ -714,6 +730,7 @@ function semiautomaticDetection(id, cfnZero) {
       if (typeof cfnZero !== 'undefined') { cfnZero(); }
       document.removeEventListener('clmtrackrConverged', onConvergence);
     }
+    clmtrackrTimeout(ctracker, onConvergence, TRACKR_TIMEOUT, info);
     document.addEventListener('clmtrackrConverged', onConvergence, false);
     ++sdRun;
   }
