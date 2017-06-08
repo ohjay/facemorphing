@@ -848,6 +848,7 @@ function toggleCamera() {
     camera.pause(); camera.src = ''; cameraStream.getTracks()[0].stop();
     camera.style.display = 'none';
     cameraWrapper.style.display = 'none';
+    bigGreenButton.innerText = BUTTON_LABEL_FINALIZE;
   } else {
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||
