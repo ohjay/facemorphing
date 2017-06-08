@@ -95,7 +95,7 @@ const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
 const CALIBRATION      = true; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
 const TENSION          = 0.8; // higher if anxious
-const D_PTS_FILEPATH   = 'data/lion.json';
+const D_PTS_FILEPATH   = 'data/default.json';
 
 // Animation parameters
 const NUM_WORKERS = 2;
