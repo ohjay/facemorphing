@@ -54,9 +54,9 @@ const D_DISSOLVE_FRAC  = 0.5;
 const ID_ANIMALS = {
   'lion-btn'     : ['http://i.imgur.com/m3q1BuQ.jpg', 'data/lion.json'     ],
   'dog-btn'      : ['http://i.imgur.com/tRhcfFR.jpg', 'data/dog.json'      ],
-  'chameleon-btn': ['images/other/chameleon.jpg',     'data/chameleon.json'],
-  'fish-btn'     : ['images/other/fish.jpg',          'data/fish.json'     ],
-  'rabbit-btn'   : ['images/other/rabbit.jpg',        'data/rabbit.json'   ]
+  'chameleon-btn': ['http://i.imgur.com/SOQTdc0.jpg', 'data/chameleon.json'],
+  'fish-btn'     : ['http://i.imgur.com/dH8EReB.jpg', 'data/fish.json'     ],
+  'rabbit-btn'   : ['http://i.imgur.com/tW6kjMQ.jpg', 'data/rabbit.json'   ]
 }
 
 // Keycodes (because who actually remembers all the numbers)
@@ -92,7 +92,7 @@ const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
 const PATH_JSON_TO     = 'data/dog.json'; // leave blank if nonexistent
-const CALIBRATION      = false; // true if setting points for a new dst image
+const CALIBRATION      = true; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
 const TENSION          = 0.8; // higher if anxious
 const D_PTS_FILEPATH   = 'data/default.json';
