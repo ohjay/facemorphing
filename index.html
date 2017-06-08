@@ -66,12 +66,23 @@
         <div id="numframes-wrapper" class="param-inner-wrapper">
           <label for="numframes-range" class="param-content">Number of frames</label>
           <input type="range" name="numframesRange" id="numframes-range" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesInput.value = this.value" />
-          <input type="number" name="numframesInput" id="numframes-input" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
+          <input readonly type="number" name="numframesInput" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
         </div>
         <div id="fps-wrapper" class="param-inner-wrapper">
           <label for="fps-range">FPS</label>
-          <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" value="20" oninput="this.form.fpsInput.value = this.value" />
-          <input type="number" name="fpsInput" id="fps-input" class="param-content" min="1" max="50" value="20" oninput="this.form.fpsRange.value = this.value" />
+          <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
+          <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
+        </div>
+        <br />
+        <div id="df0-wrapper" class="param-inner-wrapper">
+          <label for="df0-range">df0</label>
+          <input type="range" name="df0Range" id="df0-range" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df0Input.value = this.value" />
+          <input readonly type="number" name="df0Input" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df0Range.value = this.value" />
+        </div>
+        <div id="df1-wrapper" class="param-inner-wrapper">
+          <label for="df1-range">df1</label>
+          <input type="range" name="df1Range" id="df1-range" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df1Input.value = this.value" />
+          <input readonly type="number" name="df1Input" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df1Range.value = this.value" />
         </div>
       </form>
 

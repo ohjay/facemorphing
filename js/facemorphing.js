@@ -23,10 +23,10 @@ const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
-const ID_NUMFRAMES_INPUT    = 'numframes-input';
 const ID_NUMFRAMES_RANGE    = 'numframes-range';
-const ID_FPS_INPUT          = 'fps-input';
 const ID_FPS_RANGE          = 'fps-range';
+const ID_DF0_RANGE          = 'df0-range';
+const ID_DF1_RANGE          = 'df1-range';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -40,16 +40,11 @@ const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
 const FREEZE_ERROR = 'Cannot freeze a nonexistent camera frame.';
 
-const DISSOLVE_FRAC_0  = 0.5;
-const DISSOLVE_FRAC_1  = 0.5;
-const MAX_FRAME_COUNT  = 100;  // from a basic one-way standpoint
-const MIN_FRAME_COUNT  = 2;
 const D_WARP_FRAC_STEP = 0.05; // "d" means default value
 const D_FRAME_COUNT    = 1.0 / D_WARP_FRAC_STEP;
-const MAX_FPS          = 50;
-const MIN_FPS          = 1;
 const D_DELAY          = 50; // equivalent to 20fps
 const D_FPS            = 1000.0 / D_DELAY;
+const D_DISSOLVE_FRAC  = 0.5;
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -64,6 +59,7 @@ const ZERO      = 48;
 const NINE      = 57;
 const L_ARROW   = 37;
 const R_ARROW   = 39;
+const PERIOD    = 190;
 
 // Contrasting markers
 const MARKER_PREFIX = 'images/markers/stroud_';
@@ -107,9 +103,11 @@ var midpoints, triangles; // to be filled in after triangulation
 var bigGreenButton;
 var cropper;
 var currentCropId; // ID of image currently being cropped
-var gifCreated   = false;
-var warpFracStep = D_WARP_FRAC_STEP;
-var delay        = D_DELAY;
+var gifCreated    = false;
+var warpFracStep  = D_WARP_FRAC_STEP;
+var delay         = D_DELAY;
+var dissolveFrac0 = D_DISSOLVE_FRAC;
+var dissolveFrac1 = D_DISSOLVE_FRAC;
 
 var cameraStream;
 var cameraOn = false;
@@ -967,54 +965,15 @@ function handleImageUpload(imgId, inputId) {
   }
 }
 
-function validateIntegralInput(evt, ninput, minVal, maxVal, defaultVal) {
-  if (!(
-    evt.keyCode >= NP_ZERO && evt.keyCode <= NP_NINE   ||
-    evt.keyCode >= ZERO    && evt.keyCode <= NINE      ||
-    evt.keyCode == L_ARROW || evt.keyCode == R_ARROW   ||
-    evt.keyCode == DELETE  || evt.keyCode == BACKSPACE
-  )) {
-    return null; // ensure that the input is either a number or a backspace/delete
-  }
-  
-  if (ninput > maxVal && !(evt.keyCode in [DELETE, BACKSPACE])) {
-    evt.preventDefault();
-    return maxVal;
-  } else if (ninput < minVal && !(evt.keyCode in [DELETE, BACKSPACE])) {
-    evt.preventDefault();
-    return minVal;
-  } else if (ninput == '' || ninput == null) {
-    return defaultVal;
-  }
-  
-  return ninput;
-}
-
 function configureInputs() {
   // Number of frames <-> warp fraction increment
-  $('#' + ID_NUMFRAMES_INPUT).on('keydown keyup', function(evt) {
-    var validated = validateIntegralInput(
-      evt, this.value, MAX_FRAME_COUNT, MIN_FRAME_COUNT, D_FRAME_COUNT);
-    if (validated !== null) {
-      $(this).val(validated);
-    }
-    warpFracStep = 1.0 / this.value;
-  });
-  $('#' + ID_NUMFRAMES_RANGE).on('input', function() {
-    warpFracStep = 1.0 / this.value;
-  });
-  
+  $('#' + ID_NUMFRAMES_RANGE).on('input', function() { warpFracStep = 1.0 / this.value; });
   // Frames per second <-> frame delay
-  $('#' + ID_FPS_INPUT).on('keydown keyup', function(evt) {
-    var validated = validateIntegralInput(evt, this.value, MAX_FPS, MIN_FPS, D_FPS);
-    if (validated !== null) {
-      $(this).val(validated);
-    }
-    delay = 1000.0 / this.value;
-  });
-  $('#' + ID_FPS_RANGE).on('input', function() {
-    delay = 1000.0 / this.value;
-  });
+  $('#' + ID_FPS_RANGE).on('input', function() { delay = 1000.0 / this.value; });
+  // Zeroth image dissolve fraction
+  $('#' + ID_DF0_RANGE).on('input', function() { dissolveFrac0 = this.value; });
+  // First image dissolve fraction
+  $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value; });
 }
 
 $(document).ready(function() {
@@ -1055,7 +1014,7 @@ $(document).ready(function() {
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
           points[ID_IMG_TO], document.getElementById(ID_CVS_OUT),
-          DISSOLVE_FRAC_0, DISSOLVE_FRAC_1);
+          dissolveFrac0, dissolveFrac1);
       this.innerText = BUTTON_LABEL_DOWNLOAD;
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
