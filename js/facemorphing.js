@@ -704,8 +704,8 @@ function automaticFeatureDetection(id) {
  * Loads initial positions for a selected group of meaningful features,
  * then allows the user to drag those positions around.
  */
-function semiautomaticDetection(id, cfnZero) {
-  if (sdRun < (CALIBRATION ? 2 : 1)) { // we can run this twice if we're calibrating
+function semiautomaticDetection(id, cfnZero, override=false) {
+  if (sdRun < (CALIBRATION ? 2 : 1) || override) { // we can run this twice if we're calibrating
     if (sdRun < 1) {
       getRidOfAllOfTheMarkers();
     }
@@ -1084,7 +1084,7 @@ function trySwitchAnimals(imgId, animalConfig) {
     semiautomaticDetection(otherId, function() {
       drawGroupCurves(allGroups, imgId);
       alock = false;
-    });
+    }, true);
   }
 }
 
