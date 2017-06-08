@@ -32,6 +32,14 @@
   background-color: #0a409b;
 }
 
+.animal {
+  background-color: #9605da;
+}
+
+.animal:hover {
+  background-color: #6d029f;
+}
+
 .info-left {
   float: left;
   width: 70%;

@@ -50,6 +50,15 @@ const D_DELAY          = 50; // equivalent to 20fps
 const D_FPS            = 1000.0 / D_DELAY;
 const D_DISSOLVE_FRAC  = 0.5;
 
+// Animal buttons / image paths
+const ID_ANIMALS = {
+  'lion-btn'     : ['http://i.imgur.com/m3q1BuQ.jpg', 'data/lion.json'     ],
+  'dog-btn'      : ['http://i.imgur.com/tRhcfFR.jpg', 'data/dog.json'      ],
+  'chameleon-btn': ['images/other/chameleon.jpg',     'data/chameleon.json'],
+  'fish-btn'     : ['images/other/fish.jpg',          'data/fish.json'     ],
+  'rabbit-btn'   : ['images/other/rabbit.jpg',        'data/rabbit.json'   ]
+}
+
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
 const SHIFT     = 16;
@@ -83,9 +92,10 @@ const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
 const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
-const CALIBRATION      = false; // true if setting points for a new dst image
+const CALIBRATION      = true; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
 const TENSION          = 0.8; // higher if anxious
+const D_PTS_FILEPATH   = 'data/lion.json';
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -124,6 +134,9 @@ var markerMagic = 0;
 
 var Mode = Object.freeze({'SEMIAUTO': 'semiautomatic', 'MANUAL': 'manual'});
 var selectionMode = (typeof PATH_JSON_TO == 'undefined') ? Mode.MANUAL : Mode.SEMIAUTO;
+var alock = false; // makeshift lock on switching animals
+
+var defaultPoints = [];
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -705,6 +718,7 @@ function semiautomaticDetection(id, cfnZero) {
     var onConvergence = function(evt) {
       info.hasConverged = true;
       positions = ctracker.getCurrentPosition(); // clmtrackr notation
+      if (!positions) positions = defaultPoints.slice();
       for (i = 0; i < CLMTRACKR_SINGLE.length; ++i, ++total) {
         logPoint(positions[CLMTRACKR_SINGLE[i]], id, true);
       }
@@ -713,7 +727,7 @@ function semiautomaticDetection(id, cfnZero) {
         for (j = 0; j < groupSize; ++j, ++total) {
           logPoint(positions[CLMTRACKR_GROUPS[i][j]], id, true);
         }
-      
+
         // Plot a curve through the last GROUP_SIZE points
         curveThrough(points[id].slice(total - groupSize, total), id);
         allGroups.push([total - groupSize, total]);
@@ -757,6 +771,12 @@ function importPoints(id, filepath) {
     var imgPos = findPosition(document.getElementById(id));
     drawMarkers(id, [imgPos[0], imgPos[1]], true);
     markerMagic = currMarkerId;
+  });
+}
+
+function loadDefaultPoints() {
+  $.getJSON(D_PTS_FILEPATH, function(data) {
+    defaultPoints = data.points;
   });
 }
 
@@ -987,6 +1007,14 @@ function configureInputs() {
   $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });
   $('#' + ID_GIF_BTN).click(function(evt) { tryCreateGif(); });
   $('#' + ID_CAMERA_BTN).click(function(evt) { tryToggleCamera(); });
+
+  // Animal selection
+  var makeTrySwitchAnimals = function(animalConfig) {
+    return function(evt) { trySwitchAnimals(ID_IMG_TO, animalConfig); }
+  }
+  for (var btnId in ID_ANIMALS) {
+    $('#' + btnId).click(makeTrySwitchAnimals(ID_ANIMALS[btnId]));
+  }
 }
 
 function clearCanvas(canvasId, hide=false) {
@@ -999,7 +1027,7 @@ function toManualSelection() {
   if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE && selectionMode != Mode.MANUAL) {
     // Clear canvases of present detritus, delete markers
     clearCanvas(ID_CVS_FROM, true);
-    clearCanvas(ID_CVS_TO, true);
+    clearCanvas(ID_CVS_TO,   true);
     markerMagic = 0; getRidOfAllOfTheMarkers();
 
     // Remove all points
@@ -1034,7 +1062,34 @@ function tryToggleCamera() {
   }
 }
 
+function trySwitchAnimals(imgId, animalConfig) {
+  if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE &&
+      selectionMode == Mode.SEMIAUTO && !alock) {
+    alock = true;
+    var otherId = (imgId == ID_IMG_FROM) ? ID_IMG_TO : ID_IMG_FROM;
+
+    // Get rid of ("refresh") stuff
+    clearCanvas(ID_CVS_FROM);
+    clearCanvas(ID_CVS_TO);
+    markerMagic = 0; getRidOfAllOfTheMarkers();
+    points = {}; added = []; allGroups = [];
+
+    document.getElementById(imgId).src = animalConfig[0];
+    if (!CALIBRATION) {
+      importPoints(imgId, animalConfig[1]);
+    }
+
+    // Re-run semiautomatic detection
+    semiautomaticDetection(otherId, function() {
+      drawGroupCurves(allGroups, imgId);
+      alock = false;
+    });
+  }
+}
+
 $(document).ready(function() {
+  loadDefaultPoints(); // you never know when these might come in handy
+
   // Set up the points for the destination image
   if (typeof PATH_JSON_TO != 'undefined') {
     if (!CALIBRATION) {
