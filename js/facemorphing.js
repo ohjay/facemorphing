@@ -27,6 +27,10 @@ const ID_NUMFRAMES_RANGE    = 'numframes-range';
 const ID_FPS_RANGE          = 'fps-range';
 const ID_DF0_RANGE          = 'df0-range';
 const ID_DF1_RANGE          = 'df1-range';
+const ID_BIG_GREEN_BTN      = 'big-green-btn';
+const ID_MANUAL_BTN         = 'manual-btn';
+const ID_GIF_BTN            = 'gif-btn';
+const ID_CAMERA_BTN         = 'camera-btn';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -117,6 +121,9 @@ var allGroups   = []; // curve adjustment
 var sdRun       = 0;  // number of times semiautomatic detection has been run
 var inv         = {}; // marker ID # --> index in respective `points` array
 var markerMagic = 0;
+
+var Mode = Object.freeze({'SEMIAUTO': 'semiautomatic', 'MANUAL': 'manual'});
+var selectionMode = (typeof PATH_JSON_TO == 'undefined') ? Mode.MANUAL : Mode.SEMIAUTO;
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -626,8 +633,8 @@ function finalizePointSelection() {
   } else if (npFrom != npTo) {
     alert('You must select the same number of points in each image!');
   } else {
-    $('#from').off('click');
-    $('#to').off('click');
+    $('#' + ID_IMG_FROM).off('click');
+    $('#' + ID_IMG_TO).off('click');
   
     var mtData = runTriangulation();
     midpoints = mtData[0], triangles = mtData[1];
@@ -974,6 +981,56 @@ function configureInputs() {
   $('#' + ID_DF0_RANGE).on('input', function() { dissolveFrac0 = this.value; });
   // First image dissolve fraction
   $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value; });
+
+  // Buttons
+  $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });
+  $('#' + ID_GIF_BTN).click(function(evt) { tryCreateGif(); });
+  $('#' + ID_CAMERA_BTN).click(function(evt) { tryToggleCamera(); });
+}
+
+function clearCanvas(canvasId, hide=false) {
+  var cvs = document.getElementById(canvasId);
+  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+  if (hide) cvs.style.display = 'none';
+}
+
+function toManualSelection() {
+  if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE && selectionMode != Mode.MANUAL) {
+    // Clear canvases of present detritus, delete markers
+    clearCanvas(ID_CVS_FROM, true);
+    clearCanvas(ID_CVS_TO, true);
+    markerMagic = 0; getRidOfAllOfTheMarkers();
+
+    // Remove all points
+    points = {}; added = [];
+
+    $('#' + ID_IMG_FROM).click(makeGetCoordinates(ID_IMG_FROM));
+    $('#' + ID_IMG_TO).click(makeGetCoordinates(ID_IMG_TO));
+
+    document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() {
+      handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO);
+    }, true);
+
+    selectionMode = Mode.MANUAL;
+  }
+}
+
+function tryCreateGif() {
+  if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+    finalizePointSelection();
+  }
+  if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE ||
+       bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD) && !gifCreated) {
+    gifCreated = true;
+    createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
+  }
+}
+
+function tryToggleCamera() {
+  if (bigGreenButton.innerText == BUTTON_LABEL_FREEZE ||
+      bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+    toggleCamera();
+  }
 }
 
 $(document).ready(function() {
@@ -987,13 +1044,13 @@ $(document).ready(function() {
     });
   } else {
     // Point selection click handler(s)
-    $('#from').click(makeGetCoordinates(ID_IMG_FROM));
-    $('#to').click(makeGetCoordinates(ID_IMG_TO));
+    $('#' + ID_IMG_FROM).click(makeGetCoordinates(ID_IMG_FROM));
+    $('#' + ID_IMG_TO).click(makeGetCoordinates(ID_IMG_TO));
   }
   
   // "Big green button" handler
-  bigGreenButton = document.getElementById('big-green-btn');
-  $('#big-green-btn').click(function(evt) {
+  bigGreenButton = document.getElementById(ID_BIG_GREEN_BTN);
+  $('#' + ID_BIG_GREEN_BTN).click(function(evt) {
     if (this.innerText == BUTTON_LABEL_CROP) {
       var otherId = (currentCropId == ID_IMG_FROM) ? ID_IMG_TO : ID_IMG_FROM;
       var otherImg = document.getElementById(otherId);
@@ -1066,20 +1123,10 @@ $(document).ready(function() {
         }
         break;
       case SPACE:
-        if (bigGreenButton.innerText == BUTTON_LABEL_FREEZE ||
-            bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
-          toggleCamera();
-        }
+        tryToggleCamera();
         break;
       case BACKSLASH:
-        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
-          finalizePointSelection();
-        }
-        if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE ||
-             bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD) && !gifCreated) {
-          gifCreated = true;
-          createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
-        }
+        tryCreateGif();
         break;
       case SHIFT:
         if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
