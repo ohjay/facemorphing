@@ -748,7 +748,7 @@ function semiautomaticDetection(id, cfnZero, override=false) {
       logPoint([positions[15][0], 0.30 * positions[15][1]], id, true);
 
       drawMarkers(id, findPosition(img), true, true);
-      if (typeof cfnZero !== 'undefined') { cfnZero(); }
+      if (typeof cfnZero !== 'undefined' && cfnZero != null) { cfnZero(); }
       document.removeEventListener('clmtrackrConverged', onConvergence);
     }
     clmtrackrTimeout(ctracker, onConvergence, TRACKR_TIMEOUT, info);
@@ -1097,7 +1097,7 @@ function _startCalibration() {
   selectionMode = Mode.CALI;
 
   relevId = ID_IMG_TO;
-  semiautomaticDetection(ID_IMG_TO);
+  semiautomaticDetection(ID_IMG_TO, null, true);
 }
 
 $(document).ready(function() {
