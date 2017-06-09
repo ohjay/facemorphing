@@ -1055,8 +1055,9 @@ function tryCreateGif() {
   if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
     finalizePointSelection();
   }
-  if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE ||
-       bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD) && !gifCreated) {
+  if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE  ||
+       bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD ||
+       bigGreenButton.innerText == BUTTON_LABEL_REFRESH) && !gifCreated) {
     gifCreated = true;
     createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
   }
