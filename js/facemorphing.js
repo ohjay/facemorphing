@@ -132,8 +132,9 @@ var sdRun       = 0;  // number of times semiautomatic detection has been run
 var inv         = {}; // marker ID # --> index in respective `points` array
 var markerMagic = 0;
 
-var Mode = Object.freeze({'SEMIAUTO': 'semiautomatic', 'MANUAL': 'manual'});
+var Mode = Object.freeze({'SEMIAUTO': 'semiautomatic', 'MANUAL': 'manual', 'CALI': 'calibration'});
 var selectionMode = (typeof PATH_JSON_TO == 'undefined') ? Mode.MANUAL : Mode.SEMIAUTO;
+var prevSelectionMode;
 var alock = false; // makeshift lock on switching animals
 
 var defaultPoints = [];
@@ -1088,6 +1089,17 @@ function trySwitchAnimals(imgId, animalConfig) {
   }
 }
 
+/*
+ * For administrative use only.
+ */
+function _startCalibration() {
+  prevSelectionMode = selectionMode;
+  selectionMode = Mode.CALI;
+
+  relevId = ID_IMG_TO;
+  semiautomaticDetection(ID_IMG_TO);
+}
+
 $(document).ready(function() {
   loadDefaultPoints(); // you never know when these might come in handy
 
@@ -1173,7 +1185,11 @@ $(document).ready(function() {
         }
         break;
       case ENTER:
-        if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+        if (selectionMode == Mode.CALI) {
+          relevId = ID_IMG_FROM;
+          serializePoints(ID_IMG_TO);
+          selectionMode = prevSelectionMode;
+        } else if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
           getRidOfAllOfTheMarkers();
           // Run automatic feature detection
           automaticFeatureDetection(ID_IMG_FROM);
