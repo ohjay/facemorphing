@@ -27,6 +27,7 @@ const ID_NUMFRAMES_RANGE    = 'numframes-range';
 const ID_FPS_RANGE          = 'fps-range';
 const ID_DF0_RANGE          = 'df0-range';
 const ID_DF1_RANGE          = 'df1-range';
+const ID_WF_RANGE           = 'wf-range';
 const ID_BIG_GREEN_BTN      = 'big-green-btn';
 const ID_MANUAL_BTN         = 'manual-btn';
 const ID_GIF_BTN            = 'gif-btn';
@@ -49,6 +50,7 @@ const D_FRAME_COUNT    = 1.0 / D_WARP_FRAC_STEP;
 const D_DELAY          = 50; // equivalent to 20fps
 const D_FPS            = 1000.0 / D_DELAY;
 const D_DISSOLVE_FRAC  = 0.5;
+const D_WARP_FRAC      = 0.5;
 
 // Animal buttons / image paths
 const ID_ANIMALS = {
@@ -122,6 +124,7 @@ var warpFracStep  = D_WARP_FRAC_STEP;
 var delay         = D_DELAY;
 var dissolveFrac0 = D_DISSOLVE_FRAC;
 var dissolveFrac1 = D_DISSOLVE_FRAC;
+var warpFrac      = D_WARP_FRAC;
 
 var cameraStream;
 var cameraOn = false;
@@ -272,7 +275,7 @@ function runTriangulation() {
   addCornerPoints(ID_IMG_FROM);
   addCornerPoints(ID_IMG_TO);
   
-  var midpoints = getMidpoints(points[ID_IMG_FROM], points[ID_IMG_TO], 0.5);
+  var midpoints = getMidpoints(points[ID_IMG_FROM], points[ID_IMG_TO], warpFrac);
   var tri = Delaunay.triangulate(midpoints);
   
   renderTriangulation(tri, document.getElementById(ID_CVS_FROM), points[ID_IMG_FROM]);
@@ -1004,6 +1007,8 @@ function configureInputs() {
   $('#' + ID_DF0_RANGE).on('input', function() { dissolveFrac0 = this.value; });
   // First image dissolve fraction
   $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value; });
+  // Warp fraction (t)
+  $('#' + ID_WF_RANGE ).on('input', function() { warpFrac = this.value; });
 
   // Buttons
   $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });
