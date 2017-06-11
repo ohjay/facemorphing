@@ -54,11 +54,11 @@ const D_WARP_FRAC      = 0.5;
 
 // Animal buttons / image paths
 const ID_ANIMALS = {
-  'lion-btn'     : ['http://i.imgur.com/m3q1BuQ.jpg', 'data/lion.json'     ],
-  'dog-btn'      : ['http://i.imgur.com/tRhcfFR.jpg', 'data/dog.json'      ],
-  'chameleon-btn': ['http://i.imgur.com/SOQTdc0.jpg', 'data/chameleon.json'],
-  'fish-btn'     : ['http://i.imgur.com/dH8EReB.jpg', 'data/fish.json'     ],
-  'rabbit-btn'   : ['http://i.imgur.com/tW6kjMQ.jpg', 'data/rabbit.json'   ]
+  'lion-btn'     : ['http://i.imgur.com/m3q1BuQ.jpg', 'data/lion.min.json'     ],
+  'dog-btn'      : ['http://i.imgur.com/tRhcfFR.jpg', 'data/dog.min.json'      ],
+  'chameleon-btn': ['http://i.imgur.com/SOQTdc0.jpg', 'data/chameleon.min.json'],
+  'fish-btn'     : ['http://i.imgur.com/dH8EReB.jpg', 'data/fish.min.json'     ],
+  'rabbit-btn'   : ['http://i.imgur.com/tW6kjMQ.jpg', 'data/rabbit.min.json'   ]
 }
 
 // Keycodes (because who actually remembers all the numbers)
@@ -93,11 +93,11 @@ const TRACKR_TIMEOUT   = 10000; // ms
 const CLMTRACKR_SINGLE = [4, 10, 26, 31, 46, 48];
 const CLMTRACKR_GROUPS = [
   [6, 7, 8], [23, 24, 25], [28, 29, 30], [36, 37, 38], [50, 52, 54, 44]];
-const PATH_JSON_TO     = 'data/lion.json'; // leave blank if nonexistent
+const PATH_JSON_TO     = 'data/lion.min.json'; // leave blank if nonexistent
 const CALIBRATION      = false; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
 const TENSION          = 0.8; // higher if anxious
-const D_PTS_FILEPATH   = 'data/default.json';
+const D_PTS_FILEPATH   = 'data/default.min.json';
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -772,7 +772,7 @@ function serializePoints(id) {
 
 function importPoints(id, filepath) {
   $.getJSON(filepath, function(data) {
-    points[id] = data.points;
+    points[id] = unnormalize(data.points);
     var imgPos = findPosition(document.getElementById(id));
     drawMarkers(id, [imgPos[0], imgPos[1]], true);
     markerMagic = currMarkerId;
@@ -781,8 +781,28 @@ function importPoints(id, filepath) {
 
 function loadDefaultPoints() {
   $.getJSON(D_PTS_FILEPATH, function(data) {
-    defaultPoints = data.points;
+    defaultPoints = unnormalize(data.points);
   });
+}
+
+/*
+ * For administrative use only.
+ */
+function normalize(filepath) {
+  $.getJSON(filepath, function(data) {
+    var fromImg = document.getElementById(ID_IMG_FROM);
+    var width = fromImg.clientWidth, height = fromImg.clientHeight;
+    points['normalized'] = data.points.map(function(elt) {
+      return [elt[0] / width, elt[1] / height];
+    });
+    serializePoints('normalized');
+  });
+}
+
+function unnormalize(points) {
+  var fromImg = document.getElementById(ID_IMG_FROM);
+  var width = fromImg.clientWidth, height = fromImg.clientHeight;
+  return points.map(elt => [elt[0] * width, elt[1] * height]);
 }
 
 /*
@@ -1106,7 +1126,7 @@ function _startCalibration() {
   semiautomaticDetection(ID_IMG_TO, null, true);
 }
 
-$(document).ready(function() {
+$(window).on("load", function() {
   loadDefaultPoints(); // you never know when these might come in handy
 
   // Set up the points for the destination image
