@@ -1242,4 +1242,14 @@ $(window).on("load", function() {
   
   // Input setup
   configureInputs();
+
+  // Information box
+  $(document).on('click', '#show-info', function() {
+    new Custombox.modal({
+      content: {
+        effect: 'flash',
+        target: '#info-modal'
+      }
+    }).open();
+  });
 });

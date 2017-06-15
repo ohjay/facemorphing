@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <title>Face Morphing: Example Usage</title>
+  <title>Interactive Face Morphing</title>
 
   <!-- Stylesheets and... stuff -->
   <link href="css/base.min.css" rel="stylesheet">
   <link href="css/cropper.min.css" rel="stylesheet">
+  <link href="css/custombox.min.css" rel="stylesheet">
   <link href="css/facemorphing.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width">
   <!--[if lt IE 9]>
@@ -15,9 +16,9 @@
   <![endif]-->
 </head>
 <body>
-  <div class="wrapper">
-    <h1 align="middle">Face Morphing: Example Usage</h1>
-    <h3 align="middle">Owen Jow &nbsp;&middot;&nbsp; May 2017</h3>
+  <div class="outer-wrapper"><div class="inner-wrapper">
+    <h1 align="middle">Interactive Face Morphing</h1>
+    <h3 align="middle">Owen Jow &nbsp;&middot;&nbsp; May - June 2017</h3>
     <hr />
     <br />
 
@@ -106,6 +107,16 @@
       </div>
       <span id="progress-label"></span>
     </p>
+  </div></div>
+
+  <!-- Modal button -->
+  <button type="button" class="button" id="show-info">?</button>
+
+  <!-- Modals -->
+  <div id="info-modal" class="info-modal">
+    Well, web design, we meet again. Damn it all.
+    <br /><br />
+    <button type="button" class="button" onclick="Custombox.modal.close();">Close</button>
   </div>
 
   <!-- Scripts -->
@@ -117,6 +128,8 @@
   <script src="js/model_pca_20_svm.js"></script>
   <script src="js/gif.js"></script>
   <script src="js/k3n_spline.js"></script>
+  <script src="js/custombox.min.js"></script>
+  <script src="js/custombox.legacy.min.js"></script>
   <script src="js/facemorphing.js"></script>
 </body>
 </html>
