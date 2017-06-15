@@ -32,6 +32,9 @@ const ID_BIG_GREEN_BTN      = 'big-green-btn';
 const ID_MANUAL_BTN         = 'manual-btn';
 const ID_GIF_BTN            = 'gif-btn';
 const ID_CAMERA_BTN         = 'camera-btn';
+const ID_INFO_BTN           = 'show-info';
+const ID_INFO_MODAL         = 'info-modal';
+const ID_DL_LINK            = 'download-link';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -1164,10 +1167,11 @@ $(window).on("load", function() {
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
       finalizePointSelection();
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
+      var canvasTo = document.getElementById(ID_CVS_OUT);
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
-          points[ID_IMG_TO], document.getElementById(ID_CVS_OUT),
-          dissolveFrac0, dissolveFrac1);
+          points[ID_IMG_TO], canvasTo, dissolveFrac0, dissolveFrac1);
       this.innerText = BUTTON_LABEL_DOWNLOAD;
+      document.getElementById(ID_DL_LINK).href = canvasTo.toDataURL('image/png');
     } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
       downloadImage(ID_CVS_OUT);
       this.innerText = BUTTON_LABEL_REFRESH;
@@ -1244,11 +1248,11 @@ $(window).on("load", function() {
   configureInputs();
 
   // Information box
-  $(document).on('click', '#show-info', function() {
+  $(document).on('click', '#' + ID_INFO_BTN, function() {
     new Custombox.modal({
       content: {
         effect: 'flash',
-        target: '#info-modal'
+        target: '#' + ID_INFO_MODAL
       }
     }).open();
   });
