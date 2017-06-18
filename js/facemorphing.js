@@ -1198,6 +1198,7 @@ $(window).on("load", function() {
       markerMagic = 0; getRidOfAllOfTheMarkers();
       setPhase(3);
       setupReminders();
+      window.onresize = null;
     } else if (this.innerText == BUTTON_LABEL_REFRESH) {
       window.location.reload(false);
     }
