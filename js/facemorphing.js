@@ -150,7 +150,7 @@ var prevSelectionMode;
 var alock = false; // makeshift lock on switching animals
 
 var defaultPoints = [];
-var width, height, currPos;
+var width, height, currPos, fromData, toData;
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -491,12 +491,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
   var warpedSrc0, warpedSrc1;
   var src0X, src0Y, src1X, src1Y, xfl, yfl, src0Color, src1Color, finalIdx;
   
-  var fromImg = document.getElementById(ID_IMG_FROM);
-  var toImg = document.getElementById(ID_IMG_TO);
   var sample = USE_NEAREST ? nearest : bilerp;
-  
-  var fromData = getImageData(fromImg).data;
-  var toData = getImageData(toImg).data;
   var finalData = new Array(width * height * 4).fill(0);
   
   var numTriangles = triangles.length;
@@ -583,12 +578,11 @@ function setNextFrame(gif, frame, fromPts, toPts, t) {
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
-  var imgFrom = document.getElementById(ID_IMG_FROM);
   var animatedSequence = new GIF({
     workers: NUM_WORKERS,
     quality: GIF_QUALITY,
-    width: imgFrom.clientWidth,
-    height: imgFrom.clientHeight
+    width: width,
+    height: height
   });
   
   var bar   = document.getElementById(ID_PROGRESS_BAR);
@@ -663,6 +657,9 @@ function finalizePointSelection() {
   } else {
     $('#' + ID_IMG_FROM).off('click');
     $('#' + ID_IMG_TO).off('click');
+    
+    fromData = getImageData(document.getElementById(ID_IMG_FROM)).data;
+    toData = getImageData(document.getElementById(ID_IMG_TO)).data;
   
     var mtData = runTriangulation();
     midpoints = mtData[0], triangles = mtData[1];
