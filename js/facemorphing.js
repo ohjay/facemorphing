@@ -37,6 +37,8 @@ const ID_INFO_MODAL         = 'info-modal';
 const ID_DL_LINK            = 'download-link';
 const ID_INSTRUCTIONS       = 'instructions';
 const ID_IMAGES_OUTPUT      = 'images-and-output';
+const ID_FROM_REMINDER      = 'from-reminder';
+const ID_TO_REMINDER        = 'to-reminder';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -1142,6 +1144,13 @@ function lockDimensions(section) {
   section.style.height = section.clientHeight + 'px';
 }
 
+function setupReminders() {
+  var fromReminder = document.getElementById(ID_FROM_REMINDER);
+  fromReminder.src = document.getElementById(ID_IMG_FROM).src;
+  var toReminder   = document.getElementById(ID_TO_REMINDER);
+  toReminder.src   = document.getElementById(ID_IMG_TO).src;
+}
+
 $(window).on("load", function() {
   loadDefaultPoints(); // you never know when these might come in handy
 
@@ -1189,6 +1198,7 @@ $(window).on("load", function() {
       document.getElementById(ID_DL_LINK).href = canvasTo.toDataURL('image/png');
       markerMagic = 0; getRidOfAllOfTheMarkers();
       setPhase(3);
+      setupReminders();
     } else if (this.innerText == BUTTON_LABEL_REFRESH) {
       window.location.reload(false);
     }

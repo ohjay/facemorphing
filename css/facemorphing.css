@@ -75,6 +75,25 @@
   float: right;
 }
 
+.output-left {
+  width: 67%;
+  float: left;
+}
+
+.output-right {
+  width: 33%;
+  float: right;
+}
+
+.output-centered {
+  margin-left: 25%;
+  width: 75%;
+}
+
+.reminder {
+  width: 99.4%;
+}
+
 .botspace-1 {
   margin-bottom: 1px;
 }
