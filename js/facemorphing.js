@@ -147,6 +147,7 @@ var prevSelectionMode;
 var alock = false; // makeshift lock on switching animals
 
 var defaultPoints = [];
+var width, height, currPos;
 
 function findPosition(elt) {
   if (typeof(elt.offsetParent) != 'undefined') {
@@ -489,7 +490,6 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
   
   var fromImg = document.getElementById(ID_IMG_FROM);
   var toImg = document.getElementById(ID_IMG_TO);
-  var width = fromImg.clientWidth, height = fromImg.clientHeight;
   var sample = USE_NEAREST ? nearest : bilerp;
   
   var fromData = getImageData(fromImg).data;
@@ -798,8 +798,6 @@ function loadDefaultPoints() {
  */
 function normalize(filepath) {
   $.getJSON(filepath, function(data) {
-    var fromImg = document.getElementById(ID_IMG_FROM);
-    var width = fromImg.clientWidth, height = fromImg.clientHeight;
     points['normalized'] = data.points.map(function(elt) {
       return [elt[0] / width, elt[1] / height];
     });
@@ -808,8 +806,6 @@ function normalize(filepath) {
 }
 
 function unnormalize(points) {
-  var fromImg = document.getElementById(ID_IMG_FROM);
-  var width = fromImg.clientWidth, height = fromImg.clientHeight;
   return points.map(elt => [elt[0] * width, elt[1] * height]);
 }
 
@@ -1276,8 +1272,15 @@ $(window).on("load", function() {
   });
 
   // Resize refresh
+  var fromImg = document.getElementById(ID_IMG_FROM);
+  width = fromImg.clientWidth, height = fromImg.clientHeight, currPos = findPosition(fromImg);
   window.onresize = function(evt) {
-    window.location.reload(false);
+    var fromImg = document.getElementById(ID_IMG_FROM);
+    var pos = findPosition(fromImg);
+    if (fromImg.clientWidth !== width || fromImg.clientHeight !== height ||
+        pos[0] !== currPos[0]         || pos[1] !== currPos[1]) {
+      window.location.reload(false);
+    }
   };
 
   // Lock the height of each section
