@@ -34,7 +34,8 @@ const ID_GIF_BTN            = 'gif-btn';
 const ID_CAMERA_BTN         = 'camera-btn';
 const ID_INFO_BTN           = 'show-info';
 const ID_INFO_MODAL         = 'info-modal';
-const ID_DL_LINK            = 'download-link';
+const ID_IMG_DL_LINK        = 'img-download-link';
+const ID_GIF_DL_LINK        = 'gif-download-link';
 const ID_INSTRUCTIONS       = 'instructions';
 const ID_IMAGES_OUTPUT      = 'images-and-output';
 const ID_FROM_REMINDER      = 'from-reminder';
@@ -618,7 +619,9 @@ function createAnimatedSequence(fromPts, toPts, step) {
   }
   
   animatedSequence.on('finished', function(blob) {
-    window.open(URL.createObjectURL(blob));
+    var url = URL.createObjectURL(blob);
+    document.getElementById(ID_GIF_DL_LINK).href = url;
+    window.open(url);
   });
   setForwardFrames(1.0); // set the ball rolling
 }
@@ -1082,7 +1085,6 @@ function tryCreateGif() {
     finalizePointSelection();
   }
   if ((bigGreenButton.innerText == BUTTON_LABEL_COMPUTE  ||
-       bigGreenButton.innerText == BUTTON_LABEL_DOWNLOAD ||
        bigGreenButton.innerText == BUTTON_LABEL_REFRESH) && !gifCreated) {
     gifCreated = true;
     createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
@@ -1195,7 +1197,7 @@ $(window).on("load", function() {
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
           points[ID_IMG_TO], canvasTo, dissolveFrac0, dissolveFrac1);
       this.innerText = BUTTON_LABEL_REFRESH;
-      document.getElementById(ID_DL_LINK).href = canvasTo.toDataURL('image/png');
+      document.getElementById(ID_IMG_DL_LINK).href = canvasTo.toDataURL('image/png');
       markerMagic = 0; getRidOfAllOfTheMarkers();
       setPhase(3);
       setupReminders();
