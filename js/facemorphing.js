@@ -35,18 +35,20 @@ const ID_CAMERA_BTN         = 'camera-btn';
 const ID_INFO_BTN           = 'show-info';
 const ID_INFO_MODAL         = 'info-modal';
 const ID_DL_LINK            = 'download-link';
+const ID_INSTRUCTIONS       = 'instructions';
+const ID_IMAGES_OUTPUT      = 'images-and-output';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
 const BUTTON_LABEL_FREEZE   = 'Freeze camera image';
-const BUTTON_LABEL_FINALIZE = 'Finalize point selection';
-const BUTTON_LABEL_COMPUTE  = 'Compute midpoint image';
-const BUTTON_LABEL_DOWNLOAD = 'Download output image';
+const BUTTON_LABEL_FINALIZE = 'Finalize point selection'; // phase 1 -> phase 2
+const BUTTON_LABEL_COMPUTE  = 'Compute midpoint image'; // phase 2 -> phase 3
 const BUTTON_LABEL_REFRESH  = 'Start over again';
 const UPLOAD_PROMPT         = 'Replace this image';
 const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
-const FREEZE_ERROR = 'Cannot freeze a nonexistent camera frame.';
+const FREEZE_ERROR  = 'Cannot freeze a nonexistent camera frame.';
+const PHASE_CLASSES = ['phase1', 'phase2', 'phase3'];
 
 const D_WARP_FRAC_STEP = 0.05; // "d" means default value
 const D_FRAME_COUNT    = 1.0 / D_WARP_FRAC_STEP;
@@ -101,6 +103,7 @@ const CALIBRATION      = false; // true if setting points for a new dst image
 const CURVE_COLOR      = '#7fff00';
 const TENSION          = 0.8; // higher if anxious
 const D_PTS_FILEPATH   = 'data/default.min.json';
+const AUTO_ENABLED     = false;
 
 // Animation parameters
 const NUM_WORKERS = 2;
@@ -659,7 +662,9 @@ function finalizePointSelection() {
     var mtData = runTriangulation();
     midpoints = mtData[0], triangles = mtData[1];
     bigGreenButton.innerText = BUTTON_LABEL_COMPUTE;
+    return true; // success
   }
+  return false; // failure
 }
 
 function startClmtrackr(img) {
@@ -1027,11 +1032,11 @@ function configureInputs() {
   // Frames per second <-> frame delay
   $('#' + ID_FPS_RANGE).on('input', function() { delay = 1000.0 / this.value; });
   // Zeroth image dissolve fraction
-  $('#' + ID_DF0_RANGE).on('input', function() { dissolveFrac0 = this.value; });
+  $('#' + ID_DF0_RANGE).on('input', function() { dissolveFrac0 = this.value / 100.0; });
   // First image dissolve fraction
-  $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value; });
+  $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value / 100.0; });
   // Warp fraction (t)
-  $('#' + ID_WF_RANGE ).on('input', function() { warpFrac = this.value; });
+  $('#' + ID_WF_RANGE ).on('input', function() { warpFrac = this.value / 100.0; });
 
   // Buttons
   $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });
@@ -1118,6 +1123,13 @@ function trySwitchAnimals(imgId, animalConfig) {
   }
 }
 
+function setPhase(phase) {
+  for (var i = 0; i < phase - 1; ++i) {
+    $('.' + PHASE_CLASSES[i]).hide();
+  }
+  $('.' + PHASE_CLASSES[phase - 1]).show();
+}
+
 /*
  * For administrative use only.
  */
@@ -1127,6 +1139,11 @@ function _startCalibration() {
 
   relevId = ID_IMG_TO;
   semiautomaticDetection(ID_IMG_TO, null, true);
+}
+
+function lockDimensions(section) {
+  section.style.width  = section.clientWidth  + 'px';
+  section.style.height = section.clientHeight + 'px';
 }
 
 $(window).on("load", function() {
@@ -1165,16 +1182,17 @@ $(window).on("load", function() {
       freezeCameraFrame(ID_IMG_FROM);
       this.innerText = BUTTON_LABEL_FINALIZE;
     } else if (this.innerText == BUTTON_LABEL_FINALIZE) {
-      finalizePointSelection();
+      if (finalizePointSelection()) {
+        setPhase(2);
+      }
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
       var canvasTo = document.getElementById(ID_CVS_OUT);
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
           points[ID_IMG_TO], canvasTo, dissolveFrac0, dissolveFrac1);
-      this.innerText = BUTTON_LABEL_DOWNLOAD;
-      document.getElementById(ID_DL_LINK).href = canvasTo.toDataURL('image/png');
-    } else if (this.innerText == BUTTON_LABEL_DOWNLOAD) {
-      downloadImage(ID_CVS_OUT);
       this.innerText = BUTTON_LABEL_REFRESH;
+      document.getElementById(ID_DL_LINK).href = canvasTo.toDataURL('image/png');
+      markerMagic = 0; getRidOfAllOfTheMarkers();
+      setPhase(3);
     } else if (this.innerText == BUTTON_LABEL_REFRESH) {
       window.location.reload(false);
     }
@@ -1219,7 +1237,7 @@ $(window).on("load", function() {
           relevId = ID_IMG_FROM;
           serializePoints(ID_IMG_TO);
           selectionMode = prevSelectionMode;
-        } else if (bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
+        } else if (AUTO_ENABLED && bigGreenButton.innerText == BUTTON_LABEL_FINALIZE) {
           getRidOfAllOfTheMarkers();
           // Run automatic feature detection
           automaticFeatureDetection(ID_IMG_FROM);
@@ -1256,4 +1274,13 @@ $(window).on("load", function() {
       }
     }).open();
   });
+
+  // Resize refresh
+  window.onresize = function(evt) {
+    window.location.reload(false);
+  };
+
+  // Lock the height of each section
+  lockDimensions(document.getElementById(ID_INSTRUCTIONS));
+  lockDimensions(document.getElementById(ID_IMAGES_OUTPUT));
 });

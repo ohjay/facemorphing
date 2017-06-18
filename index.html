@@ -20,94 +20,139 @@
     <h1 align="middle">Interactive Face Morphing</h1>
     <h3 align="middle">Owen Jow &nbsp;&middot;&nbsp; May - June 2017</h3>
     <hr />
-    <br />
+    
+    <!-- Instructions -->
+    <div id="instructions">
+      <div class="phase1">
+        <b>Phase I &nbsp;\&nbsp; Point Selection:</b> Drag the left image's markers around in such a way
+        that they match the structure and meaning of the corresponding markers on the right. If running
+        manual selection, click on equivalent feature points in each image (<b>in order!</b>).
+      </div>
+      <div class="phase2">
+        <b>Phase II &nbsp;\&nbsp; Creation:</b> Adjust the parameters at the bottom of the page,
+        (if you like; the defaults are there for a reason!), then hit the button below. You can independently
+        create a GIF of the morph sequence as well.
+      </div>
+      <div class="phase3">
+        <b>Phase III &nbsp;\&nbsp; Nothing to Do:</b> Congratulations! There is nothing to do,
+        apart from GIF creation if you haven't run that already. Feel free to take a break;
+        maybe go sit down and read some books by
+        <a href="http://www.goodreads.com/author/show/4464306.Jon_McGoran" target="_blank">
+        Jon McGoran</a>.
+      </div>
+    </div>
+    <div class="centered-260x50 bgb-space">
+      <button class="button size-260x50" id="big-green-btn">Finalize point selection</button>
+    </div>
+    <hr />
 
-    <span class="anchor"></span>
-    <h2 style="margin-bottom: 0.3em">Let's get started with a demonstration</h2>
-    <p>
-      <div class="info-left">
-        ...by, say, morphing between the two pictures displayed below.<br />
-        The first thing we'll have you do is select corresponding points in each image.
-      </div>
-      <div class="info-right">
-        <button class="button" id="big-green-btn">Finalize point selection</button>
-      </div>
-      <br /><br /><br />
-
-      <div style="display: inline-block;" class="upload-left">
-        <label for="upload-from" class="button upload" id="bupload-from">Replace this image</label>
-        <input type="file" id="upload-from" style="visibility: hidden;" />
-      </div>
-      <div style="display: inline-block;" class="upload-right">
-        <label for="upload-to" class="button upload" id="bupload-to">Replace this image</label>
-        <input type="file" id="upload-to" style="visibility: hidden;" />
-      </div>
-      <table width="100%"><tr>
+    <!-- Images and output -->
+    <div id="images-and-output">
+      <canvas id="canvas-output"></canvas>
+      <table class="phase1 phase2" width="100%"><tr>
         <td width="50%">
           <div id="outer-container-from">
             <img src="http://i.imgur.com/cNY9dea.jpg" id="from" crossOrigin="" />
           </div>
-          <figcaption align="middle"><code>"from" image</code></figcaption>
+          <figcaption align="middle">
+            <div style="display: inline-block;" class="upload-wrapper">
+              <label for="upload-from" class="button upload" id="bupload-from">Replace this image</label>
+              <input type="file" id="upload-from" style="visibility: hidden;" />
+            </div>
+          </figcaption>
         </td>
         <td width="50%">
           <div id="outer-container-to">
             <img src="http://i.imgur.com/m3q1BuQ.jpg" id="to" crossOrigin="" />
           </div>
-          <figcaption align="middle"><code>"to" image</code></figcaption>
+          <figcaption align="middle">
+            <div style="display: inline-block;" class="upload-wrapper">
+              <label for="upload-to" class="button upload" id="bupload-to">Replace this image</label>
+              <input type="file" id="upload-to" style="visibility: hidden;" />
+            </div>
+          </figcaption>
         </td>
       </tr></table>
-      <canvas id="canvas-from"></canvas>
-      <canvas id="canvas-to"></canvas>
-      <canvas id="canvas-output"></canvas>
-      <div id="camera-wrapper">
+      <canvas class="phase1 phase2" id="canvas-from"></canvas>
+      <canvas class="phase1 phase2" id="canvas-to"></canvas>
+      <div class="phase1 phase2" id="camera-wrapper">
         <video id="camera" preload autoplay loop muted></video>
       </div>
-      
-      <button class="button" id="manual-btn">Switch to manual point selection</button>
-      <button class="button" id="gif-btn">Create GIF</button>
-      <button class="button" id="camera-btn">Toggle camera</button>
-      <button class="button animal" id="lion-btn">Lion</button>
-      <button class="button animal" id="dog-btn">Dog</button>
-      <button class="button animal" id="chameleon-btn">Chameleon</button>
-      <button class="button animal" id="fish-btn">Fish</button>
-      <button class="button animal" id="rabbit-btn">Rabbit</button>
-      <br /><br /><br /><br /><br /><br />
-
-      <form class="param-outer-wrapper">
+    </div>
+    <hr /><br />
+    
+    <!-- Phase I options (manual selection, camera, animal buttons) -->
+    <div class="phase1 phase1-size">
+      <div class="options-left">
+        <div id="animal-buttons">
+          <div class="animal-wrapper">
+            <button class="button purple botspace-1" id="lion-btn">Lion</button>
+          </div>
+          <div class="animal-wrapper">
+            <button class="button purple botspace-1" id="dog-btn">Dog</button>
+          </div>
+          <div class="animal-wrapper">
+            <button class="button purple botspace-1" id="chameleon-btn">Chameleon</button>
+          </div>
+          <div class="animal-wrapper">
+            <button class="button purple botspace-1" id="fish-btn">Fish</button>
+          </div>
+          <div class="animal-wrapper">
+            <button class="button purple botspace-1" id="rabbit-btn">Rabbit</button>
+          </div>
+        </div>
+      </div>
+      <div class="options-right">
+        <button class="button purple botspace-1" id="manual-btn">Switch to manual selection</button>
+        <button class="button purple botspace-1" id="camera-btn">Toggle camera</button>
+      </div>
+    </div>
+    
+    <!-- Phase II options (morph params: df0, df1, wf) -->
+    <div class="phase2">
+      <form>
+        <div id="df0-wrapper" class="param-inner-wrapper">
+          <div><label for="df0-range">color weight (% left image)</label></div>
+          <input type="range" name="df0Range" id="df0-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Input.value = this.value" />
+          <input readonly type="number" name="df0Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Range.value = this.value" />
+        </div>
+        <div id="df1-wrapper" class="param-inner-wrapper">
+          <div><label for="df1-range">color weight (% right image)</label></div>
+          <input type="range" name="df1Range" id="df1-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Input.value = this.value" />
+          <input readonly type="number" name="df1Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Range.value = this.value" />
+        </div>
+        <div id="wf-wrapper" class="param-inner-wrapper">
+          <div><label for="wf-range">warp weight (% left image)</label></div>
+          <input type="range" name="wfRange" id="wf-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfInput.value = this.value" />
+          <input readonly type="number" name="wfInput" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfRange.value = this.value" />
+        </div>
+      </form>
+    </div>
+    
+    <!-- GIF creation box (#frames, fps, "create GIF", progress bar) -->
+    <div class="phase2 phase3">
+      <form>
         <div id="numframes-wrapper" class="param-inner-wrapper">
-          <label for="numframes-range" class="param-content">Number of frames</label>
+          <div><label for="numframes-range" class="param-content">number of frames</label></div>
           <input type="range" name="numframesRange" id="numframes-range" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesInput.value = this.value" />
           <input readonly type="number" name="numframesInput" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
         </div>
         <div id="fps-wrapper" class="param-inner-wrapper">
-          <label for="fps-range">FPS</label>
+          <div><label for="fps-range">fps</label></div>
           <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
           <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
         </div>
-        <br />
-        <div id="df0-wrapper" class="param-inner-wrapper">
-          <label for="df0-range">df0</label>
-          <input type="range" name="df0Range" id="df0-range" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df0Input.value = this.value" />
-          <input readonly type="number" name="df0Input" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df0Range.value = this.value" />
-        </div>
-        <div id="df1-wrapper" class="param-inner-wrapper">
-          <label for="df1-range">df1</label>
-          <input type="range" name="df1Range" id="df1-range" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df1Input.value = this.value" />
-          <input readonly type="number" name="df1Input" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.df1Range.value = this.value" />
-        </div>
-        <div id="wf-wrapper" class="param-inner-wrapper">
-          <label for="wf-range">wf</label>
-          <input type="range" name="wfRange" id="wf-range" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.wfInput.value = this.value" />
-          <input readonly type="number" name="wfInput" class="param-content" min="0" max="1" step="0.01" value="0.5" oninput="this.form.wfRange.value = this.value" />
-        </div>
       </form>
-
+      <div class="size-260x50 topbotspace-1"><button class="button" id="gif-btn">Create GIF</button></div>
       <div id="progress">
         <div id="bar"></div>
       </div>
       <span id="progress-label"></span>
-      <a id="download-link" download="midpoint.png" target="_blank">Download</a>
-    </p>
+    </div>
+    
+    <div class="phase3">
+      <a id="download-link" download="midpoint.png" target="_blank">Download midpoint image</a>
+    </div>
   </div></div>
 
   <!-- Modal button -->
@@ -115,7 +160,27 @@
 
   <!-- Modals -->
   <div id="info-modal" class="info-modal">
-    Well, web design, we meet again. Damn it all.
+    This is a demo of a face morphing implementation for
+    <a href="http://www.jonmcgoran.com/" target="_blank">Jon McGoran</a>'s
+    upcoming novel, <i>Spliced</i>. If interested, you can peruse the source code on
+    <a href="https://github.com/ohjay/facemorphing" target="_blank">GitHub</a>.
+    By the way, if you try to resize the page it will refresh automatically;
+    I was too lazy to deal with all of the resizing adjustments that
+    would've been necessary otherwise.
+    
+    <br /><br />
+    
+    Incidentally: if you like web design (or image manipulation) and would like to help
+    improve this webpage and/or the morphing implementation, please do reach out
+    via GitHub or email! I didn't put a lot of thought into organizing my code, but if I know
+    anyone's actually reading it I'm willing to spend a bit of time refactoring things.
+    
+    <br /><br />
+    
+    As a disclaimer, none of the animal photographs were taken by me.
+    <a href="https://github.com/ohjay/facemorphing/blob/master/README.md#animal-image-sources" target="_blank">Here</a>
+    are the sources for each of them.
+    
     <br /><br />
     <button type="button" class="button" onclick="Custombox.modal.close();">Close</button>
   </div>

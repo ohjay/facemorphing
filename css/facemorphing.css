@@ -24,7 +24,7 @@
 
 .upload {
   background-color: #1155cc;
-  padding: 7.5px 16px;
+  padding: 10px 16px;
   font-size: 14px;
 }
 
@@ -32,36 +32,56 @@
   background-color: #0a409b;
 }
 
-.animal {
+.purple {
   background-color: #9605da;
 }
 
-.animal:hover {
+.purple:hover {
   background-color: #6d029f;
 }
 
-.info-left {
-  float: left;
-  width: 70%;
+.centered-260x50 {
+  margin: 0 auto;
+  width: 260px;
+  height: 50px;
 }
 
-.info-right {
-  float: right;
-  width: 30%;
+.size-260x50 {
+  width: 260px;
+  height: 50px;
 }
 
-.upload-left {
-  width: 50%;
+.bgb-space {
+  margin-top: 20px;
+  margin-bottom: 25px;
 }
 
-.upload-right {
-  width: 50%;
-  float: right;
+.upload-wrapper {
+  width: 100%;
 }
 
 .upload-disabled {
   background-color: #0a409b;
   cursor: not-allowed;
+}
+
+.options-left {
+  width: 50%;
+  float: left;
+}
+
+.options-right {
+  width: 50%;
+  float: right;
+}
+
+.botspace-1 {
+  margin-bottom: 1px;
+}
+
+.topbotspace-1 {
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
 
 #canvas-from, #canvas-to, #canvas-output {
@@ -118,7 +138,75 @@ img {
 }
 
 #show-info {
-  position: absolute;
-  top: 10;
-  left: 10;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  background-color: #d3d3d3;
+  color: #2a2a2a;
+}
+
+#show-info:hover {
+  background-color: #2a2a2a;
+  color: #d3d3d3;
+}
+
+button:focus {
+  outline: 0;
+}
+
+button#lion-btn {
+  background-image: url("../images/other/lion_small.jpg");
+}
+
+button#dog-btn {
+  background-image: url("../images/other/dog_small.jpg");
+}
+
+button#chameleon-btn {
+  background-image: url("../images/other/chameleon_small.jpg");
+}
+
+button#fish-btn {
+  background-image: url("../images/other/fish_small.jpg");
+}
+
+button#rabbit-btn {
+  background-image: url("../images/other/rabbit_small.jpg");
+}
+
+.animal-wrapper button {
+  background-position: 0px 0px;
+  background-repeat: no-repeat;
+  background-size: 42px auto;
+  padding-left: calc(42px + 32px);
+  width: 200px;
+}
+
+#animal-buttons {
+  width: 0px;
+  height: calc(49px * 5);
+}
+
+.phase1-size {
+  width: 100%;
+  height: calc(49px * 5);
+}
+
+.phase2, .phase3 {
+  display: none;
+}
+
+.phase1 {
+  display: initial;
+}
+
+b {
+  font-weight: 700;
+}
+
+#images-and-output {
+  margin-bottom: 20px;
 }
