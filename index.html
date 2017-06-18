@@ -29,7 +29,7 @@
         manual selection, click on equivalent feature points in each image (<b>in order!</b>).
       </div>
       <div class="phase2">
-        <b>Phase II &nbsp;\&nbsp; Creation:</b> Adjust the parameters at the bottom of the page,
+        <b>Phase II &nbsp;\&nbsp; Creation:</b> Adjust the parameters at the bottom of the page
         (if you like; the defaults are there for a reason!), then hit the button below. You can independently
         create a GIF of the morph sequence as well.
       </div>
@@ -48,11 +48,14 @@
 
     <!-- Images and output -->
     <div id="images-and-output">
-      <div class="output-centered">
-        <div class="phase3 output-left">
+      <div class="phase3 output-wrapper-left">
+        <img id="gif-output" crossOrigin="" />
+      </div>
+      <div class="phase3 output-wrapper-right">
+        <div class="output-left">
           <canvas id="canvas-output"></canvas>
         </div>
-        <div class="phase3 output-right">
+        <div class="output-right">
           <div><img id="from-reminder" class="reminder" crossOrigin="" /></div>
           <div><img id="to-reminder" class="reminder" crossOrigin="" /></div>
         </div>

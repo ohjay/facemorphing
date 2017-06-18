@@ -40,6 +40,7 @@ const ID_INSTRUCTIONS       = 'instructions';
 const ID_IMAGES_OUTPUT      = 'images-and-output';
 const ID_FROM_REMINDER      = 'from-reminder';
 const ID_TO_REMINDER        = 'to-reminder';
+const ID_GIF_OUTPUT         = 'gif-output';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -615,7 +616,10 @@ function createAnimatedSequence(fromPts, toPts, step) {
   animatedSequence.on('finished', function(blob) {
     var url = URL.createObjectURL(blob);
     document.getElementById(ID_GIF_DL_LINK).href = url;
-    window.open(url);
+    document.getElementById(ID_GIF_OUTPUT).src   = url;
+
+    if (bigGreenButton.innerText == BUTTON_LABEL_COMPUTE)
+      window.open(url);
   });
   setForwardFrames(1.0); // set the ball rolling
 }

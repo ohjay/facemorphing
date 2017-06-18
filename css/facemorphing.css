@@ -85,13 +85,22 @@
   float: right;
 }
 
-.output-centered {
-  margin-left: 25%;
+.output-wrapper-left {
+  width: 25%;
+  float: left;
+}
+
+.output-wrapper-right {
   width: 75%;
+  float: right;
 }
 
 .reminder {
   width: 99.4%;
+}
+
+#gif-output {
+  width: 98%;
 }
 
 .botspace-1 {
