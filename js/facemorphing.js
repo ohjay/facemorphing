@@ -54,6 +54,9 @@ const UPLOAD_DISABLED_TXT   = 'Replace this image';
 
 const FREEZE_ERROR  = 'Cannot freeze a nonexistent camera frame.';
 const PHASE_CLASSES = ['phase1', 'phase2', 'phase3'];
+const W_LIMIT       = 700; // width limit (px)
+const W_WARNING_MSG = "Warning: this window size – {0} – is not supported (too small!).\n" +
+                      "Don't bother trying to run this demo on mobile, by the way.";
 
 const D_WARP_FRAC_STEP = 0.05; // "d" means default value
 const D_FRAME_COUNT    = 1.0 / D_WARP_FRAC_STEP;
@@ -413,6 +416,18 @@ function triangleInterior(triangle) {
 Number.prototype.clip = function(min, max) {
   return Math.min(Math.max(this, min), max);
 };
+
+/*
+ * Source: https://stackoverflow.com/a/4673436
+ */
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined' ? args[number] : match;
+    });
+  };
+}
 
 /*
  * Returns a 1D RGBA array for the given image element.
@@ -1200,6 +1215,11 @@ function setupReminders() {
 }
 
 $(window).on("load", function() {
+  var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  if (w <= W_LIMIT) {
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    setTimeout(function() { alert(W_WARNING_MSG.format(w + 'x' + h)); }, 1);
+  }
   loadDefaultPoints(); // you never know when these might come in handy
 
   // Set up the points for the destination image
