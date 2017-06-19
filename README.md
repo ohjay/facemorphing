@@ -1,4 +1,6 @@
 # Face Morphing
+\* _Only tested in Chrome._
+
 Note that the "main" file is `js/facemorphing.js`, which contains interface handling alongside the actual face morphing implementation. This implementation turns out to be rather brief on its own.
 
 ### Notes

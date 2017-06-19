@@ -160,12 +160,12 @@
           <div id="numframes-wrapper" class="param-inner-wrapper">
             <div><label for="numframes-range" class="param-content">number of frames</label></div>
             <input type="range" name="numframesRange" id="numframes-range" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesInput.value = this.value" />
-            <input readonly type="number" name="numframesInput" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
+            <input readonly type="number" name="numframesInput" id="numframes-number" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
           </div>
           <div id="fps-wrapper" class="param-inner-wrapper">
             <div><label for="fps-range">fps</label></div>
             <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
-            <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
+            <input readonly type="number" name="fpsInput" id="fps-number" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
           </div>
           <div id="ease-wrapper" class="param-inner-wrapper">
             <div><label for="ease-checkbox">ease</label></div>

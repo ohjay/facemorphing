@@ -23,6 +23,8 @@ const ID_PROGRESS_BAR       = 'bar';
 const ID_PROGRESS_LABEL     = 'progress-label';
 const ID_CAMERA             = 'camera';
 const ID_CAMERA_WRAPPER     = 'camera-wrapper';
+const ID_NUMFRAMES_NUMBER   = 'numframes-number';
+const ID_FPS_NUMBER         = 'fps-number';
 const ID_NUMFRAMES_RANGE    = 'numframes-range';
 const ID_FPS_RANGE          = 'fps-range';
 const ID_DF0_RANGE          = 'df0-range';
@@ -77,6 +79,8 @@ const EASE_WF_STEPS  =
 
 const EASE_IDX_FINAL = EASE_WF_STEPS.length - 1;
 const EASE_DELAY     = 30;
+const EASE_NUMFRAMES = EASE_WF_STEPS.length * 2;
+const EASE_FPS       = Math.floor(1000.0 / EASE_DELAY);
 
 // Animal buttons / image paths
 const ID_ANIMALS = {
@@ -697,6 +701,8 @@ function finalizePointSelection() {
   } else {
     $('#' + ID_IMG_FROM).off('click');
     $('#' + ID_IMG_TO).off('click');
+    document.onmousedown = null;
+    document.onmouseup   = null;
     
     fromData = getImageData(document.getElementById(ID_IMG_FROM)).data;
     toData = getImageData(document.getElementById(ID_IMG_TO)).data;
@@ -1009,18 +1015,32 @@ function disableSingle(inputId, buttonId) {
   $('#' + buttonId).text(UPLOAD_DISABLED_TXT);
 }
 
+function reenableSingle(inputId, buttonId) {
+  $('#' + buttonId).removeClass('upload-disabled');
+  $('#' + buttonId).text(UPLOAD_PROMPT);
+  document.getElementById(inputId).disabled = false;
+}
+
 function disableUploads() {
-  document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
-  document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
-  $('.upload').addClass('upload-disabled');
-  $('.upload').text(UPLOAD_DISABLED_TXT);
+  if (selectionMode == Mode.SEMIAUTO) {
+    disableSingle(ID_INPUT_UPLOAD_FROM, ID_BUTTON_UPLOAD_FROM);
+  } else {
+    document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = true;
+    document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = true;
+    $('.upload').addClass('upload-disabled');
+    $('.upload').text(UPLOAD_DISABLED_TXT);
+  }
 }
 
 function reenableUploads() {
-  $('.upload').removeClass('upload-disabled');
-  $('.upload').text(UPLOAD_PROMPT);
-  document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
-  document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
+  if (selectionMode == Mode.SEMIAUTO) {
+    reenableSingle(ID_INPUT_UPLOAD_FROM, ID_BUTTON_UPLOAD_FROM);
+  } else {
+    $('.upload').removeClass('upload-disabled');
+    $('.upload').text(UPLOAD_PROMPT);
+    document.getElementById(ID_INPUT_UPLOAD_FROM).disabled = false;
+    document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
+  }
 }
 
 function hideCanvasesAndMarkers() {
@@ -1096,7 +1116,23 @@ function configureInputs() {
   // Warp fraction (t)
   $('#' + ID_WF_RANGE ).on('input', function() { warpFrac = this.value / 100.0; });
   // Ease
-  $('#' + ID_EASE).change(function() { ease = this.checked; });
+  $('#' + ID_EASE).change(function() {
+    ease = this.checked;
+    if (ease) {
+      var numframesRange      = document.getElementById(ID_NUMFRAMES_RANGE);
+      numframesRange.disabled = true;
+      numframesRange.value    = EASE_NUMFRAMES;
+      document.getElementById(ID_NUMFRAMES_NUMBER).value = EASE_NUMFRAMES;
+
+      var fpsRange      = document.getElementById(ID_FPS_RANGE);
+      fpsRange.disabled = true;
+      fpsRange.value    = EASE_FPS;
+      document.getElementById(ID_FPS_NUMBER).value = EASE_FPS;
+    } else {
+      document.getElementById(ID_NUMFRAMES_RANGE).disabled = false;
+      document.getElementById(ID_FPS_RANGE).disabled       = false;
+    }
+  });
 
   // Buttons
   $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });
