@@ -987,6 +987,24 @@ function reenableUploads() {
   document.getElementById(ID_INPUT_UPLOAD_TO).disabled   = false;
 }
 
+function hideCanvasesAndMarkers() {
+  document.getElementById(ID_CVS_FROM).style.display = 'none';
+  document.getElementById(ID_CVS_TO).style.display   = 'none';
+
+  for (var i = currMarkerId - 1; i >= markerMagic; --i) {
+    document.getElementById('marker' + i).style.display = 'none';
+  }
+}
+
+function showCanvasesAndMarkers() {
+  document.getElementById(ID_CVS_FROM).style.display = 'inline';
+  document.getElementById(ID_CVS_TO).style.display   = 'inline';
+
+  for (var i = currMarkerId - 1; i >= markerMagic; --i) {
+    document.getElementById('marker' + i).style.display = 'inline';
+  }
+}
+
 function handleImageUpload(imgId, inputId) {
   currentCropId = imgId;
   var img = document.getElementById(imgId);
@@ -994,6 +1012,8 @@ function handleImageUpload(imgId, inputId) {
   var reader = new FileReader();
 
   reader.onloadend = function() {
+    if (selectionMode == Mode.SEMIAUTO)
+      hideCanvasesAndMarkers();
     img.style.display = 'none';
     img.src = reader.result;
     
@@ -1185,6 +1205,8 @@ $(window).on("load", function() {
       var img = document.getElementById(currentCropId);
       img.src = croppedCvs.toDataURL();
       reenableUploads();
+      if (selectionMode == Mode.SEMIAUTO)
+        showCanvasesAndMarkers();
       this.innerText = BUTTON_LABEL_FINALIZE;
     } else if (this.innerText == BUTTON_LABEL_FREEZE) {
       freezeCameraFrame(ID_IMG_FROM);
