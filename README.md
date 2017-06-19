@@ -1,5 +1,5 @@
 # Face Morphing
-Note that the "main" file is `js/facemorphing.js`, which contains interface handling alongside the actual face morphing implementation. The implementation turns out to be rather brief on its own.
+Note that the "main" file is `js/facemorphing.js`, which contains interface handling alongside the actual face morphing implementation. This implementation turns out to be rather brief on its own.
 
 ### Notes
 #### To set the feature points for a destination image

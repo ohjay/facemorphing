@@ -41,6 +41,7 @@ const ID_IMAGES_OUTPUT      = 'images-and-output';
 const ID_FROM_REMINDER      = 'from-reminder';
 const ID_TO_REMINDER        = 'to-reminder';
 const ID_GIF_OUTPUT         = 'gif-output';
+const ID_EASE               = 'ease';
 
 const DEFAULT_MARKER_SRC    = 'images/markers/marker_gold.png';
 const BUTTON_LABEL_CROP     = 'Set source image crop';
@@ -60,6 +61,19 @@ const D_DELAY          = 50; // equivalent to 20fps
 const D_FPS            = 1000.0 / D_DELAY;
 const D_DISSOLVE_FRAC  = 0.5;
 const D_WARP_FRAC      = 0.5;
+
+const EASE_WF_STEPS  =
+          Array.apply(null, Array(5)).map(function (_, i) { return 1.00 - 0.01 * i; })
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.95 - 0.02 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.87 - 0.03 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.75 - 0.05 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.50 - 0.05 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.27 - 0.03 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.13 - 0.02 * i; }))
+  .concat(Array.apply(null, Array(5)).map(function (_, i) { return 0.04 - 0.01 * i; }));
+
+const EASE_IDX_FINAL = EASE_WF_STEPS.length - 1;
+const EASE_DELAY     = 30;
 
 // Animal buttons / image paths
 const ID_ANIMALS = {
@@ -135,6 +149,7 @@ var delay         = D_DELAY;
 var dissolveFrac0 = D_DISSOLVE_FRAC;
 var dissolveFrac1 = D_DISSOLVE_FRAC;
 var warpFrac      = D_WARP_FRAC;
+var ease          = false;
 
 var cameraStream;
 var cameraOn = false;
@@ -575,7 +590,7 @@ function computeMidpointImage(midpoints, triangles, fromPts, toPts, cvs, df0, df
 function setNextFrame(gif, frame, fromPts, toPts, t) {
   var mi = getMidpoints(fromPts, toPts, t);
   computeMidpointImage(mi, triangles, fromPts, toPts, frame, t, 1.0 - t);
-  gif.addFrame(frame, {copy: true, delay: delay});
+  gif.addFrame(frame, {copy: true, delay: ease ? EASE_DELAY : delay});
 }
 
 function createAnimatedSequence(fromPts, toPts, step) {
@@ -585,35 +600,40 @@ function createAnimatedSequence(fromPts, toPts, step) {
     width: width,
     height: height
   });
-  
+
   var bar   = document.getElementById(ID_PROGRESS_BAR);
   var label = document.getElementById(ID_PROGRESS_LABEL);
   var frame = document.createElement('canvas');
-  
-  function setForwardFrames(t) {
+
+  function setForwardFrames(t, easeIdx=0) {
+    if (ease) t = EASE_WF_STEPS[easeIdx];
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
-    bar.style.width = Math.floor((1.0 - t) * 50) + '%';
+    bar.style.width = Math.floor((1.0 - t) * 47.5) + '%';
     label.innerHTML = bar.style.width;
-    if (t > 0.0) {
+    if ((!ease && t > 0.0) || easeIdx < EASE_IDX_FINAL) {
       t = Math.max(t - step, 0.0);
-      setTimeout(setForwardFrames.bind(null, t), 0);
+      setTimeout(setForwardFrames.bind(null, t, easeIdx + 1), 0);
     } else {
       setBackwardFrames(0.0);
     }
   }
-  function setBackwardFrames(t) {
+  function setBackwardFrames(t, easeIdx=EASE_IDX_FINAL) {
+    if (ease) t = EASE_WF_STEPS[easeIdx];
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
-    bar.style.width = Math.floor(50 + t * 50) + '%';
+    bar.style.width = Math.floor(47.5 + t * 47.5) + '%';
     label.innerHTML = bar.style.width;
-    if (t < 1.0) {
+    if ((!ease && t < 1.0) || easeIdx > 0) {
       t = Math.min(t + step, 1.0);
-      setTimeout(setBackwardFrames.bind(null, t), 0);
+      setTimeout(setBackwardFrames.bind(null, t, easeIdx - 1), 0);
     } else {
       animatedSequence.render();
     }
   }
-  
+
   animatedSequence.on('finished', function(blob) {
+    bar.style.width = '100%';
+    label.innerHTML = bar.style.width;
+
     var url = URL.createObjectURL(blob);
     document.getElementById(ID_GIF_DL_LINK).href = url;
     document.getElementById(ID_GIF_OUTPUT).src   = url;
@@ -1059,6 +1079,8 @@ function configureInputs() {
   $('#' + ID_DF1_RANGE).on('input', function() { dissolveFrac1 = this.value / 100.0; });
   // Warp fraction (t)
   $('#' + ID_WF_RANGE ).on('input', function() { warpFrac = this.value / 100.0; });
+  // Ease
+  $('#' + ID_EASE).change(function() { ease = this.checked; });
 
   // Buttons
   $('#' + ID_MANUAL_BTN).click(function(evt) { toManualSelection(); });

@@ -153,6 +153,10 @@
           <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
           <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
         </div>
+        <div id="ease-wrapper" class="param-inner-wrapper">
+          <div><label for="ease-checkbox">ease</label></div>
+          <input type="checkbox" name="ease" id="ease" class="param-content" />
+        </div>
       </form>
       <div class="size-260x50 topbotspace-1"><button class="button" id="gif-btn">Create GIF</button></div>
       <div id="progress">
@@ -162,8 +166,9 @@
     </div>
     
     <div class="phase3">
-      <a id="img-download-link" download="midpoint.png" target="_blank">Download midpoint image</a>
-      <a id="gif-download-link" download="animated.gif" target="_blank">Download GIF</a>
+      <a id="img-download-link" class="button" download="midpoint.png" target="_blank">Download midpoint image</a>
+      <a id="gif-download-link" class="button" download="animated.gif" target="_blank">Download GIF</a>
+      <button id="share-link" class="button" title="share image via imgur.com">Share</button>
     </div>
   </div></div>
 
