@@ -16,16 +16,24 @@
   font-size: 16px;
   cursor: pointer;
   float: left;
+  margin-right: 1px;
+  margin-bottom: 1px;
+}
+
+img {
+  display: block;
 }
 
 .button:hover {
   background-color: #3e8e41;
+  color: white;
 }
 
 .upload {
   background-color: #1155cc;
   padding: 10px 16px;
   font-size: 14px;
+  margin-top: 1px;
 }
 
 .upload:hover {
@@ -65,6 +73,16 @@
   cursor: not-allowed;
 }
 
+.green-disabled {
+  background-color: #3e8e41;
+  cursor: not-allowed;
+}
+
+.purple-disabled {
+  background-color: #6d029f;
+  cursor: not-allowed;
+}
+
 .options-left {
   width: 50%;
   float: left;
@@ -96,11 +114,27 @@
 }
 
 .reminder {
-  width: 99.4%;
+  width: 100%;
+}
+
+#from-reminder {
+  margin-bottom: 2px;
 }
 
 #gif-output {
-  width: 98%;
+  width: 100%;
+}
+
+.box-left {
+  display: inline-block;
+  width: 46%;
+  float: left;
+}
+
+.box-right {
+  display: inline-block;
+  width: 46%;
+  float: right;
 }
 
 .botspace-1 {
@@ -168,17 +202,19 @@ img {
 #show-info {
   position: fixed;
   bottom: 10px;
-  left: 10px;
+  right: 10px;
   width: 50px;
   height: 50px;
   padding: 0;
   background-color: #d3d3d3;
+  opacity: 0.8;
   color: #2a2a2a;
 }
 
 #show-info:hover {
   background-color: #2a2a2a;
   color: #d3d3d3;
+  opacity: 0.8;
 }
 
 button:focus {
@@ -237,4 +273,30 @@ b {
 
 #images-and-output {
   margin-bottom: 20px;
+}
+
+.text-centered {
+  text-align: center;
+}
+
+#control-label {
+  margin-top: 30px;
+}
+
+legend {
+  margin-bottom: 5px;
+}
+
+.box {
+  margin-bottom: 15px;
+}
+
+.a-button {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+#progress-label {
+  padding: 12px 12px;
+  display: inline-block;
 }

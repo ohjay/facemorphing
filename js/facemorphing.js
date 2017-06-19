@@ -610,7 +610,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = Math.floor((1.0 - t) * 47.5) + '%';
     label.innerHTML = bar.style.width;
-    if ((!ease && t > 0.0) || easeIdx < EASE_IDX_FINAL) {
+    if ((!ease && t > 0.0) || (ease && easeIdx < EASE_IDX_FINAL)) {
       t = Math.max(t - step, 0.0);
       setTimeout(setForwardFrames.bind(null, t, easeIdx + 1), 0);
     } else {
@@ -622,7 +622,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
     setNextFrame(animatedSequence, frame, fromPts, toPts, t);
     bar.style.width = Math.floor(47.5 + t * 47.5) + '%';
     label.innerHTML = bar.style.width;
-    if ((!ease && t < 1.0) || easeIdx > 0) {
+    if ((!ease && t < 1.0) || (ease && easeIdx > 0)) {
       t = Math.min(t + step, 1.0);
       setTimeout(setBackwardFrames.bind(null, t, easeIdx - 1), 0);
     } else {
@@ -636,6 +636,7 @@ function createAnimatedSequence(fromPts, toPts, step) {
 
     var url = URL.createObjectURL(blob);
     document.getElementById(ID_GIF_DL_LINK).href = url;
+    $('#' + ID_GIF_DL_LINK).removeClass('green-disabled');
     document.getElementById(ID_GIF_OUTPUT).src   = url;
 
     if (bigGreenButton.innerText == BUTTON_LABEL_COMPUTE)
@@ -1120,6 +1121,7 @@ function toManualSelection() {
     }, true);
 
     selectionMode = Mode.MANUAL;
+    $('#' + ID_MANUAL_BTN).addClass('purple-disabled');
   }
 }
 
@@ -1131,6 +1133,7 @@ function tryCreateGif() {
        bigGreenButton.innerText == BUTTON_LABEL_REFRESH) && !gifCreated) {
     gifCreated = true;
     createAnimatedSequence(points[ID_IMG_FROM], points[ID_IMG_TO], warpFracStep);
+    $('#' + ID_GIF_BTN).addClass('green-disabled');
   }
 }
 
@@ -1206,6 +1209,7 @@ $(window).on("load", function() {
     }
     semiautomaticDetection(ID_IMG_FROM, function() { // obv we have to go all the way
       drawGroupCurves(allGroups, ID_IMG_TO);
+      $('#' + ID_MANUAL_BTN).removeClass('purple-disabled');
     });
   } else {
     // Point selection click handler(s)

@@ -90,85 +90,107 @@
         <video id="camera" preload autoplay loop muted></video>
       </div>
     </div>
-    <hr /><br />
+    <hr />
+    
+    <!-- Panels (begin) -->
+    <h2 class="text-centered" id="control-label">
+      <b>&middot; &middot; &middot; Control Panels &middot; &middot; &middot;</b>
+    </h2>
     
     <!-- Phase I options (manual selection, camera, animal buttons) -->
-    <div class="phase1 phase1-size">
-      <div class="options-left">
+    <fieldset class="phase1 box box-left">
+      <legend><h3>&nbsp;&nbsp;Animals&nbsp;&nbsp;</h3></legend>
+      <div class="phase1-size">
         <div id="animal-buttons">
           <div class="animal-wrapper">
-            <button class="button purple botspace-1" id="lion-btn">Lion</button>
+            <button class="button purple" id="lion-btn">Lion</button>
           </div>
           <div class="animal-wrapper">
-            <button class="button purple botspace-1" id="dog-btn">Dog</button>
+            <button class="button purple" id="dog-btn">Dog</button>
           </div>
           <div class="animal-wrapper">
-            <button class="button purple botspace-1" id="chameleon-btn">Chameleon</button>
+            <button class="button purple" id="chameleon-btn">Chameleon</button>
           </div>
           <div class="animal-wrapper">
-            <button class="button purple botspace-1" id="fish-btn">Fish</button>
+            <button class="button purple" id="fish-btn">Fish</button>
           </div>
           <div class="animal-wrapper">
-            <button class="button purple botspace-1" id="rabbit-btn">Rabbit</button>
+            <button class="button purple" id="rabbit-btn">Rabbit</button>
           </div>
         </div>
       </div>
-      <div class="options-right">
-        <button class="button purple botspace-1" id="manual-btn">Switch to manual selection</button>
-        <button class="button purple botspace-1" id="camera-btn">Toggle camera</button>
+    </fieldset>
+    <fieldset class="phase1 box box-right">
+      <legend><h3>&nbsp;&nbsp;Selection Options&nbsp;&nbsp;</h3></legend>
+      <div class="phase1-size">
+        <button class="button purple purple-disabled" id="manual-btn">Manual selection</button>
+        <button class="button purple botspace-5" id="camera-btn">Toggle camera</button>
       </div>
-    </div>
+    </fieldset>
     
     <!-- Phase II options (morph params: df0, df1, wf) -->
-    <div class="phase2">
-      <form>
-        <div id="df0-wrapper" class="param-inner-wrapper">
-          <div><label for="df0-range">color weight (% left image)</label></div>
-          <input type="range" name="df0Range" id="df0-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Input.value = this.value" />
-          <input readonly type="number" name="df0Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Range.value = this.value" />
-        </div>
-        <div id="df1-wrapper" class="param-inner-wrapper">
-          <div><label for="df1-range">color weight (% right image)</label></div>
-          <input type="range" name="df1Range" id="df1-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Input.value = this.value" />
-          <input readonly type="number" name="df1Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Range.value = this.value" />
-        </div>
-        <div id="wf-wrapper" class="param-inner-wrapper">
-          <div><label for="wf-range">warp weight (% left image)</label></div>
-          <input type="range" name="wfRange" id="wf-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfInput.value = this.value" />
-          <input readonly type="number" name="wfInput" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfRange.value = this.value" />
-        </div>
-      </form>
-    </div>
+    <fieldset class="phase2 box">
+      <legend><h3>&nbsp;&nbsp;Morph Parameters&nbsp;&nbsp;</h3></legend>
+      <div>
+        <form>
+          <div id="df0-wrapper" class="param-inner-wrapper">
+            <div><label for="df0-range">color weight (% left image)</label></div>
+            <input type="range" name="df0Range" id="df0-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Input.value = this.value" />
+            <input readonly type="number" name="df0Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df0Range.value = this.value" />
+          </div>
+          <div id="df1-wrapper" class="param-inner-wrapper">
+            <div><label for="df1-range">color weight (% right image)</label></div>
+            <input type="range" name="df1Range" id="df1-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Input.value = this.value" />
+            <input readonly type="number" name="df1Input" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.df1Range.value = this.value" />
+          </div>
+          <div id="wf-wrapper" class="param-inner-wrapper">
+            <div><label for="wf-range">warp weight (% left image)</label></div>
+            <input type="range" name="wfRange" id="wf-range" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfInput.value = this.value" />
+            <input readonly type="number" name="wfInput" class="param-content" min="0" max="100" step="1" value="50" oninput="this.form.wfRange.value = this.value" />
+          </div>
+        </form>
+      </div>
+    </fieldset>
     
     <!-- GIF creation box (#frames, fps, "create GIF", progress bar) -->
-    <div class="phase2 phase3">
-      <form>
-        <div id="numframes-wrapper" class="param-inner-wrapper">
-          <div><label for="numframes-range" class="param-content">number of frames</label></div>
-          <input type="range" name="numframesRange" id="numframes-range" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesInput.value = this.value" />
-          <input readonly type="number" name="numframesInput" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
+    <fieldset class="phase2 phase3 box">
+      <legend><h3>&nbsp;&nbsp;GIF Setup&nbsp;&nbsp;</h3></legend>
+      <div>
+        <form>
+          <div id="numframes-wrapper" class="param-inner-wrapper">
+            <div><label for="numframes-range" class="param-content">number of frames</label></div>
+            <input type="range" name="numframesRange" id="numframes-range" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesInput.value = this.value" />
+            <input readonly type="number" name="numframesInput" class="param-content" min="2" max="100" step="1" value="20" oninput="this.form.numframesRange.value = this.value" />
+          </div>
+          <div id="fps-wrapper" class="param-inner-wrapper">
+            <div><label for="fps-range">fps</label></div>
+            <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
+            <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
+          </div>
+          <div id="ease-wrapper" class="param-inner-wrapper">
+            <div><label for="ease-checkbox">ease</label></div>
+            <input type="checkbox" name="ease" id="ease" class="param-content" />
+          </div>
+        </form>
+        <div style="line-height: 10px" >&nbsp;</div>
+        <div class="size-260x50 topbotspace-1">
+          <button class="button" id="gif-btn">Create GIF</button>
+          <span id="progress-label"></span>
         </div>
-        <div id="fps-wrapper" class="param-inner-wrapper">
-          <div><label for="fps-range">fps</label></div>
-          <input type="range" name="fpsRange" id="fps-range" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsInput.value = this.value" />
-          <input readonly type="number" name="fpsInput" class="param-content" min="1" max="50" step="1" value="20" oninput="this.form.fpsRange.value = this.value" />
+        <div style="line-height: 3px" >&nbsp;</div>
+        <div id="progress">
+          <div id="bar"></div>
         </div>
-        <div id="ease-wrapper" class="param-inner-wrapper">
-          <div><label for="ease-checkbox">ease</label></div>
-          <input type="checkbox" name="ease" id="ease" class="param-content" />
-        </div>
-      </form>
-      <div class="size-260x50 topbotspace-1"><button class="button" id="gif-btn">Create GIF</button></div>
-      <div id="progress">
-        <div id="bar"></div>
       </div>
-      <span id="progress-label"></span>
-    </div>
+    </fieldset>
     
-    <div class="phase3">
-      <a id="img-download-link" class="button" download="midpoint.png" target="_blank">Download midpoint image</a>
-      <a id="gif-download-link" class="button" download="animated.gif" target="_blank">Download GIF</a>
-    </div>
+    <fieldset class="phase3 box">
+      <legend><h3>&nbsp;&nbsp;Downloads&nbsp;&nbsp;</h3></legend>
+      <div>
+        <a id="img-download-link" class="button a-button" download="midpoint.png" target="_blank">Download midpoint image</a>
+        <a id="gif-download-link" class="button a-button green-disabled" download="animated.gif" target="_blank">Download GIF</a>
+      </div>
+    </fieldset>
   </div></div>
 
   <!-- Modal button -->
