@@ -89,7 +89,7 @@ const ID_ANIMALS = {
   'chameleon-btn': ['http://i.imgur.com/SOQTdc0.jpg', 'data/chameleon.min.json'],
   'fish-btn'     : ['http://i.imgur.com/dH8EReB.jpg', 'data/fish.min.json'     ],
   'rabbit-btn'   : ['http://i.imgur.com/tW6kjMQ.jpg', 'data/rabbit.min.json'   ]
-}
+};
 
 // Keycodes (because who actually remembers all the numbers)
 const BACKSPACE = 8;
@@ -303,16 +303,20 @@ function getMidpoints(pointsFrom, pointsTo, t) {
   return midpoints;
 }
 
-function runTriangulation() {
+function runTriangulation(corners=true, render=true) {
   // Add the corner points before triangulating
-  addCornerPoints(ID_IMG_FROM);
-  addCornerPoints(ID_IMG_TO);
+  if (corners) {
+    addCornerPoints(ID_IMG_FROM);
+    addCornerPoints(ID_IMG_TO);
+  }
   
   var midpoints = getMidpoints(points[ID_IMG_FROM], points[ID_IMG_TO], warpFrac);
   var tri = Delaunay.triangulate(midpoints);
   
-  renderTriangulation(tri, document.getElementById(ID_CVS_FROM), points[ID_IMG_FROM]);
-  renderTriangulation(tri, document.getElementById(ID_CVS_TO),   points[ID_IMG_TO]);
+  if (render) {
+    renderTriangulation(tri, document.getElementById(ID_CVS_FROM), points[ID_IMG_FROM]);
+    renderTriangulation(tri, document.getElementById(ID_CVS_TO),   points[ID_IMG_TO]);
+  }
   
   return [midpoints, tri];
 }
@@ -1298,6 +1302,9 @@ $(window).on("load", function() {
         setPhase(2);
       }
     } else if (this.innerText == BUTTON_LABEL_COMPUTE) {
+      var mtData = runTriangulation(false, false); // run triangulation again (`warpFrac` may have changed)
+      midpoints = mtData[0], triangles = mtData[1];
+
       var canvasTo = document.getElementById(ID_CVS_OUT);
       computeMidpointImage(midpoints, triangles, points[ID_IMG_FROM],
           points[ID_IMG_TO], canvasTo, dissolveFrac0, dissolveFrac1);
