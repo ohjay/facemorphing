@@ -13,6 +13,17 @@ Note that the "main" file is `js/facemorphing.js`, which contains interface hand
 
 That should be all you need!
 
+#### To enable destination image uploads
+```javascript
+document.getElementById(ID_INPUT_UPLOAD_TO).addEventListener('change', function() { handleImageUpload(ID_IMG_TO, ID_INPUT_UPLOAD_TO); }, true);
+reenableSingle(ID_INPUT_UPLOAD_TO, ID_BUTTON_UPLOAD_TO);
+```
+
+#### To decide which image's points can be dragged around
+```javascript
+relevId = ID_IMG_[FROM, TO];
+```
+
 #### Obesity
 Fun fact: barring poor `clmtrackr` output, you can give somebody a little extra weight by running automatic feature detection on the default "from" image and then warping only the other guy's shape.
 
