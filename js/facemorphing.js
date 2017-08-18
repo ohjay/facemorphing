@@ -1,5 +1,5 @@
 /*
- * face-morphing.js
+ * facemorphing.js
  * Owen Jow
  * 
  * A JavaScript module providing face morphing functionality.
@@ -1254,7 +1254,7 @@ function setupReminders() {
   toReminder.src   = document.getElementById(ID_IMG_TO).src;
 }
 
-$(window).on("load", function() {
+$(window).on('load', function() {
   var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   if (w <= W_LIMIT) {
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);

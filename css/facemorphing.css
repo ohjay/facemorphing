@@ -22,6 +22,7 @@
 
 img {
   display: block;
+  max-width: 100%;
 }
 
 .button:hover {
@@ -179,10 +180,6 @@ img {
 
 #canvas-from, #canvas-to, #canvas-output {
   display: none;
-}
-
-img {
-  max-width: 100%;
 }
 
 #progress {
