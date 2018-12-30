@@ -101,21 +101,23 @@
     <fieldset class="phase1 box box-left">
       <legend><h3>&nbsp;&nbsp;Animals&nbsp;&nbsp;</h3></legend>
       <div class="phase1-size">
-        <div id="animal-buttons">
-          <div class="animal-wrapper">
-            <button class="button purple" id="lion-btn">Lion</button>
-          </div>
-          <div class="animal-wrapper">
-            <button class="button purple" id="dog-btn">Dog</button>
-          </div>
-          <div class="animal-wrapper">
-            <button class="button purple" id="chameleon-btn">Chameleon</button>
-          </div>
-          <div class="animal-wrapper">
-            <button class="button purple" id="fish-btn">Fish</button>
-          </div>
-          <div class="animal-wrapper">
-            <button class="button purple" id="rabbit-btn">Rabbit</button>
+        <div class="phase1-box-v2">
+          <div id="animal-buttons">
+            <div class="animal-wrapper">
+              <button class="button purple" id="lion-btn">Lion</button>
+            </div>
+            <div class="animal-wrapper">
+              <button class="button purple" id="dog-btn">Dog</button>
+            </div>
+            <div class="animal-wrapper">
+              <button class="button purple" id="chameleon-btn">Chameleon</button>
+            </div>
+            <div class="animal-wrapper">
+              <button class="button purple" id="fish-btn">Fish</button>
+            </div>
+            <div class="animal-wrapper">
+              <button class="button purple" id="rabbit-btn">Rabbit</button>
+            </div>
           </div>
         </div>
       </div>
@@ -123,8 +125,12 @@
     <fieldset class="phase1 box box-right">
       <legend><h3>&nbsp;&nbsp;Selection Options&nbsp;&nbsp;</h3></legend>
       <div class="phase1-size">
-        <button class="button purple purple-disabled" id="manual-btn">Manual selection</button>
-        <button class="button purple botspace-5" id="camera-btn">Toggle camera</button>
+        <div class="phase1-box-v2">
+          <div id="phase1-box-v2-right">
+            <button class="button purple purple-disabled" id="manual-btn">Manual selection</button>
+            <button class="button purple botspace-5" id="camera-btn">Toggle camera</button>
+          </div>
+        </div>
       </div>
     </fieldset>
     
@@ -186,7 +192,7 @@
     
     <fieldset class="phase3 box">
       <legend><h3>&nbsp;&nbsp;Downloads&nbsp;&nbsp;</h3></legend>
-      <div>
+      <div id="phase3-box-v2">
         <a id="img-download-link" class="button a-button" download="midpoint.png" target="_blank">Midpoint image</a>
         <a id="gif-download-link" class="button a-button green-disabled" download="animated.gif" target="_blank">GIF</a>
       </div>
